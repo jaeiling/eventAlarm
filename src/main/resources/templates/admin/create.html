@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>학과 페이지 만들기 - EventAlarm</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}"/>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="top-bar">
+    <a th:href="@{/}" class="back-btn">← 홈</a>
+    <span class="top-bar-title">학과 페이지 만들기</span>
+  </header>
+
+  <main class="form-container">
+    <div class="form-card">
+      <div class="form-icon">🏫</div>
+      <h1 class="form-title">우리 학과 페이지 생성</h1>
+      <p class="form-desc">페이지를 생성하면 <strong>6자리 관리 번호</strong>가 발급돼요.<br/>이 번호로 행사를 등록·수정·삭제할 수 있으니 꼭 저장해두세요!</p>
+
+      <form th:action="@{/admin/create}" th:object="${dto}" method="post" class="form-body">
+
+        <div class="form-group">
+          <label class="form-label">대학교명 <span class="required">*</span></label>
+          <input type="text" th:field="*{universityName}"
+                 class="form-input" placeholder="예: 인천대학교"
+                 th:classappend="${#fields.hasErrors('universityName')} ? 'input-error' : ''"/>
+          <span class="form-error" th:if="${#fields.hasErrors('universityName')}" th:errors="*{universityName}"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">학과명 <span class="required">*</span></label>
+          <input type="text" th:field="*{departmentName}"
+                 class="form-input" placeholder="예: 정보통신공학과"
+                 th:classappend="${#fields.hasErrors('departmentName')} ? 'input-error' : ''"/>
+          <span class="form-error" th:if="${#fields.hasErrors('departmentName')}" th:errors="*{departmentName}"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">페이지 생성하기 →</button>
+      </form>
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

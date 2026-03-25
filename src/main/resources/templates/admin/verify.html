@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>관리 번호 확인 - EventAlarm</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}"/>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="top-bar">
+    <a th:href="@{/}" class="back-btn">← 홈</a>
+    <span class="top-bar-title">관리자 인증</span>
+  </header>
+
+  <main class="form-container">
+    <div class="form-card">
+      <div class="form-icon">🔐</div>
+      <h1 class="form-title">관리 번호를 입력해주세요</h1>
+      <p class="form-desc">행사를 등록·수정·삭제하려면<br/>페이지 생성 시 발급된 6자리 번호가 필요해요.</p>
+
+      <!-- 에러 메시지 -->
+      <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+
+      <form th:action="@{'/admin/' + ${pageId} + '/verify'}" method="post" class="form-body">
+        <div class="form-group">
+          <label class="form-label">6자리 관리 번호</label>
+          <input type="text" name="serialNumber" maxlength="6"
+                 class="form-input input-center input-lg"
+                 placeholder="000000" inputmode="numeric" autofocus/>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">확인</button>
+      </form>
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

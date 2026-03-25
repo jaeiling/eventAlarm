@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>페이지 생성 완료 - EventAlarm</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}"/>
+</head>
+<body>
+<div class="page-wrap">
+
+  <main class="form-container">
+    <div class="form-card result-card">
+      <div class="result-icon">🎉</div>
+      <h1 class="form-title">페이지가 만들어졌어요!</h1>
+      <p class="form-desc">아래 <strong>관리 번호</strong>를 반드시 저장해두세요.<br/>행사 등록·수정·삭제 시 이 번호가 필요해요.</p>
+
+      <div class="serial-box">
+        <span class="serial-label">관리 번호</span>
+        <span class="serial-number" id="serialNumber" th:text="${serialNumber}">------</span>
+        <button class="copy-btn-sm" onclick="copySerial()">복사</button>
+      </div>
+
+      <div class="result-actions">
+        <a th:href="@{'/admin/' + ${pageId} + '/events?serial=' + ${serialNumber}}"
+           class="btn btn-primary btn-full">행사 등록하러 가기 →</a>
+        <a th:href="@{'/page/' + ${pageId}}" class="btn btn-outline btn-full" target="_blank">
+          공개 페이지 미리보기 🔗
+        </a>
+      </div>
+
+      <p class="serial-warn">⚠️ 이 번호는 다시 확인할 수 없어요. 지금 바로 메모하거나 캡처해두세요!</p>
+    </div>
+  </main>
+
+</div>
+<script>
+  function copySerial() {
+    const serial = document.getElementById('serialNumber').textContent.trim();
+    navigator.clipboard.writeText(serial).then(() => {
+      alert('관리 번호가 복사되었습니다: ' + serial);
+    });
+  }
+</script>
+</body>
+</html>

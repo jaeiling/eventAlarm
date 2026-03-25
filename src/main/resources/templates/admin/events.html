@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>행사 관리 - EventAlarm</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}"/>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="top-bar">
+    <a th:href="@{/}" class="back-btn">← 홈</a>
+    <span class="top-bar-title" th:text="${page.universityName + ' ' + page.departmentName}">학과명</span>
+    <a th:href="@{'/page/' + ${page.id}}" class="top-bar-link" target="_blank">공개 페이지 🔗</a>
+  </header>
+
+  <main class="admin-wrap">
+
+    <!-- 성공 메시지 -->
+    <div class="alert alert-success" th:if="${successMsg}" th:text="${successMsg}"></div>
+
+    <!-- 행사 등록 폼 -->
+    <section class="admin-section">
+      <h2 class="section-heading">➕ 행사 등록</h2>
+      <form th:action="@{'/admin/' + ${page.id} + '/events/create?serial=' + ${serial}}"
+            th:object="${newEventDto}" method="post" class="event-form">
+
+        <div class="form-row">
+          <div class="form-group form-group-wide">
+            <label class="form-label">행사명 <span class="required">*</span></label>
+            <input type="text" th:field="*{title}" class="form-input" placeholder="예: 2025 개강총회"
+                   th:classappend="${#fields.hasErrors('title')} ? 'input-error' : ''"/>
+            <span class="form-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">행사 일시 <span class="required">*</span></label>
+            <input type="datetime-local" th:field="*{eventDateTime}" class="form-input"
+                   th:classappend="${#fields.hasErrors('eventDateTime')} ? 'input-error' : ''"/>
+            <span class="form-error" th:if="${#fields.hasErrors('eventDateTime')}" th:errors="*{eventDateTime}"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">장소명 <span class="required">*</span></label>
+            <input type="text" th:field="*{location}" class="form-input" placeholder="예: 인천대 7호관 101호"
+                   th:classappend="${#fields.hasErrors('location')} ? 'input-error' : ''"/>
+            <span class="form-error" th:if="${#fields.hasErrors('location')}" th:errors="*{location}"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group form-group-wide">
+            <label class="form-label">지도 검색 주소 <span class="form-hint">(카카오맵·네이버지도 검색에 사용)</span></label>
+            <input type="text" th:field="*{locationAddress}" class="form-input"
+                   placeholder="예: 인천광역시 연수구 아카데미로 119"/>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group form-group-wide">
+            <label class="form-label">행사 내용·설명</label>
+            <textarea th:field="*{description}" class="form-textarea" rows="3"
+                      placeholder="행사 상세 내용을 입력해주세요."></textarea>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">회비</label>
+            <input type="text" th:field="*{fee}" class="form-input" placeholder="예: 20,000원"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">계좌번호</label>
+            <input type="text" th:field="*{bankAccount}" class="form-input"
+                   placeholder="예: 카카오뱅크 3333-00-0000000 홍길동"/>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">등록하기</button>
+      </form>
+    </section>
+
+    <!-- 등록된 행사 목록 -->
+    <section class="admin-section">
+      <h2 class="section-heading">📋 등록된 행사</h2>
+
+      <div th:if="${#lists.isEmpty(events)}" class="empty-state">
+        아직 등록된 행사가 없어요.
+      </div>
+
+      <ul class="admin-event-list" th:if="${!#lists.isEmpty(events)}">
+        <li class="admin-event-item" th:each="event : ${events}">
+          <div class="admin-event-info">
+            <span class="admin-event-title" th:text="${event.title}">행사명</span>
+            <span class="admin-event-meta"
+                  th:text="${#temporals.format(event.eventDateTime, 'yyyy.MM.dd HH:mm')} + ' · ' + ${event.location}">
+            </span>
+          </div>
+          <div class="admin-event-actions">
+            <form th:action="@{'/admin/' + ${page.id} + '/events/' + ${event.id} + '/delete?serial=' + ${serial}}"
+                  method="post" onsubmit="return confirm('정말 삭제하시겠어요?')">
+              <button type="submit" class="btn btn-danger-sm">삭제</button>
+            </form>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+<script th:src="@{/js/common.js}"></script>
+</body>
+</html>
