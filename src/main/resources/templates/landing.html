@@ -32,7 +32,7 @@
     </div>
 
     <!-- 등록된 페이지가 있을 때 -->
-    <ul class="page-card-list" id="pageCardList" th:if="${!#lists.isEmpty(pages)}">
+    <ul class="page-card-list" id="pageCardList" th:if="${!#lists.isEmpty(pages)}" style="display:none">
       <li class="page-card-item" th:each="p : ${pages}"
           th:data-name="${p.universityName + ' ' + p.departmentName}">
         <a th:href="@{'/page/' + ${p.id}}" class="page-card-link">
@@ -113,11 +113,22 @@
     const query = document.getElementById('pageSearchInput').value.trim().toLowerCase();
     const items = document.querySelectorAll('#pageCardList .page-card-item');
     const emptyMsg = document.getElementById('pageEmptyMsg');
+    const pageCardList = document.getElementById('pageCardList');
     let visibleCount = 0;
+
+    // 검색어 없으면 목록 전체 숨김
+    if (!query) {
+      if (pageCardList) pageCardList.style.display = 'none';
+      if (emptyMsg) emptyMsg.style.display = 'none';
+      return;
+    }
+
+    // 검색어 있으면 목록 표시 후 필터링
+    if (pageCardList) pageCardList.style.display = 'flex';
 
     items.forEach(item => {
       const name = item.dataset.name.toLowerCase();
-      if (!query || name.includes(query)) {
+      if (name.includes(query)) {
         item.style.display = '';
         visibleCount++;
       } else {
@@ -126,7 +137,7 @@
     });
 
     // 검색 결과 없음 메시지
-    if (emptyMsg) emptyMsg.style.display = (visibleCount === 0 && query) ? 'block' : 'none';
+    if (emptyMsg) emptyMsg.style.display = (visibleCount === 0) ? 'block' : 'none';
   }
 </script>
 </body>
