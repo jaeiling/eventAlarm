@@ -78,7 +78,7 @@
           <label class="form-label">현재 등록된 사진</label>
           <div class="img-preview-list">
             <div class="img-preview-item" th:each="img, stat : ${event.images}">
-              <img th:src="@{'/uploads/' + ${img.storedFileName}}" alt="행사 이미지" class="img-preview-thumb"/>
+              <img th:src="${img.storedFileName}" alt="행사 이미지" class="img-preview-thumb"/>
               <span class="img-thumbnail-badge" th:if="${img.thumbnail}">대표</span>
             </div>
           </div>

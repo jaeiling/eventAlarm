@@ -67,7 +67,7 @@
             th:data-desc="${event.description}"
             th:data-fee="${event.fee}"
             th:data-account="${event.bankAccount}"
-            th:data-thumbnail="${event.thumbnailImage != null ? '/uploads/' + event.thumbnailImage.storedFileName : ''}"
+            th:data-thumbnail="${event.thumbnailImage != null ? event.thumbnailImage.storedFileName : ''}"
             onclick="openModal(this)">
 
           <!-- D-day 뱃지 -->
