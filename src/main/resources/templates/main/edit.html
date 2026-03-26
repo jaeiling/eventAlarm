@@ -10,7 +10,7 @@
 <div class="page-wrap">
 
   <header class="top-bar">
-    <a th:href="@{'/page/' + ${page.id} + '?serial=' + ${serial}}" class="back-btn">← 돌아가기</a>
+    <a th:href="@{'/page/' + ${page.slug} + '?serial=' + ${serial}}" class="back-btn">← 돌아가기</a>
     <span class="top-bar-title">행사 수정</span>
   </header>
 
@@ -19,7 +19,7 @@
       <div class="form-icon">✏️</div>
       <h1 class="form-title" th:text="${event.title}">행사명</h1>
 
-      <form th:action="@{'/page/' + ${page.id} + '/events/' + ${event.id} + '/edit?serial=' + ${serial}}"
+      <form th:action="@{'/page/' + ${page.slug} + '/events/' + ${event.id} + '/edit?serial=' + ${serial}}"
             th:object="${dto}" method="post" enctype="multipart/form-data" class="form-body">
 
         <div class="form-group">
@@ -103,7 +103,7 @@
 
         <div class="form-row" style="gap:10px; margin-top:8px">
           <button type="submit" class="btn btn-primary btn-full">수정 완료</button>
-          <a th:href="@{'/page/' + ${page.id} + '?serial=' + ${serial}}"
+          <a th:href="@{'/page/' + ${page.slug} + '?serial=' + ${serial}}"
              class="btn btn-outline btn-full">취소</a>
         </div>
       </form>

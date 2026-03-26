@@ -13,7 +13,7 @@
   <header class="main-header">
     <a th:href="@{/}" class="back-btn">← 홈</a>
     <div class="main-header-info">
-      <a th:href="@{'/page/' + ${page.id}}" style="text-decoration:none; color:inherit; display:block; text-align:center;">
+      <a th:href="@{'/page/' + ${page.slug}}" style="text-decoration:none; color:inherit; display:block; text-align:center;">
         <p class="main-univ" th:text="${page.universityName}">대학교명</p>
         <h1 class="main-dept" th:text="${page.departmentName}">학과명</h1>
       </a>
@@ -39,11 +39,11 @@
     <!-- ② 필터 -->
     <section class="filter-section">
       <div class="filter-wrap">
-        <a th:href="@{'/page/' + ${page.id}(showPast=false, sortDesc=false)}"
+        <a th:href="@{'/page/' + ${page.slug}(showPast=false, sortDesc=false)}"
            class="filter-chip" th:classappend="${!showPast && !sortDesc} ? ' active' : ''">임박순</a>
-        <a th:href="@{'/page/' + ${page.id}(showPast=false, sortDesc=true)}"
+        <a th:href="@{'/page/' + ${page.slug}(showPast=false, sortDesc=true)}"
            class="filter-chip" th:classappend="${!showPast && sortDesc} ? ' active' : ''">오래 남은순</a>
-        <a th:href="@{'/page/' + ${page.id}(showPast=true, sortDesc=false)}"
+        <a th:href="@{'/page/' + ${page.slug}(showPast=true, sortDesc=false)}"
            class="filter-chip" th:classappend="${showPast} ? ' active' : ''">지난 것도 표시</a>
       </div>
     </section>
@@ -88,9 +88,9 @@
 
           <!-- 관리자 수정/삭제 버튼 (인증된 경우만 표시) -->
           <div class="event-card-admin" th:if="${isAdmin}" onclick="event.stopPropagation()">
-            <a th:href="@{'/page/' + ${page.id} + '/events/' + ${event.id} + '/edit?serial=' + ${serial}}"
+            <a th:href="@{'/page/' + ${page.slug} + '/events/' + ${event.id} + '/edit?serial=' + ${serial}}"
                class="btn-admin-edit">수정</a>
-            <form th:action="@{'/page/' + ${page.id} + '/events/' + ${event.id} + '/delete?serial=' + ${serial}}"
+            <form th:action="@{'/page/' + ${page.slug} + '/events/' + ${event.id} + '/delete?serial=' + ${serial}}"
                   method="post" onsubmit="return confirm('정말 삭제하시겠어요?')">
               <button type="submit" class="btn-admin-delete">삭제</button>
             </form>

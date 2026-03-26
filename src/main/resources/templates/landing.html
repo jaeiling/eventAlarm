@@ -45,7 +45,7 @@
     <ul class="page-card-list" id="pageCardList" th:if="${!#lists.isEmpty(pages)}" style="display:none">
       <li class="page-card-item" th:each="p : ${pages}"
           th:data-name="${p.universityName + ' ' + p.departmentName}">
-        <a th:href="@{'/page/' + ${p.id}}" class="page-card-link">
+        <a th:href="@{'/page/' + ${p.slug}}" class="page-card-link">
           <div class="page-card-inner">
             <span class="page-card-icon">🏫</span>
             <div class="page-card-text">

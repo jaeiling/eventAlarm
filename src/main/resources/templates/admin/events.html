@@ -12,7 +12,7 @@
   <header class="top-bar">
     <a th:href="@{/}" class="back-btn">← 홈</a>
     <span class="top-bar-title" th:text="${page.universityName + ' ' + page.departmentName}">학과명</span>
-    <a th:href="@{'/page/' + ${page.id}}" class="top-bar-link" target="_blank">공개 페이지 🔗</a>
+    <a th:href="@{'/page/' + ${page.slug}}" class="top-bar-link" target="_blank">공개 페이지 🔗</a>
   </header>
 
   <main class="admin-wrap">

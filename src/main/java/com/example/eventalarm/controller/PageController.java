@@ -107,7 +107,9 @@ public class PageController {
         }
         // from=page 이면 메인 페이지로, 아니면 관리자 행사 등록 페이지로
         if ("page".equals(from)) {
-            return "redirect:/page/" + pageId + "?serial=" + serialNumber;
+            DepartmentPage page = pageService.findById(pageId);
+            String slug = page.getSlug() != null ? page.getSlug() : String.valueOf(pageId);
+            return "redirect:/page/" + slug + "?serial=" + serialNumber;
         }
         return "redirect:/admin/" + pageId + "/events?serial=" + serialNumber;
     }
@@ -173,12 +175,13 @@ public class PageController {
                                  @RequestParam(required = false) String serial,
                                  Model model) {
         // slug가 숫자면 기존 ID 방식으로 처리
-        DepartmentPage page;
-        if (slug.matches("\\d+")) {
-            page = pageService.findById(Long.parseLong(slug));
-        } else {
-            page = pageService.findBySlug(slug)
-                    .orElseThrow(() -> new IllegalArgumentException("페이지를 찾을 수 없습니다."));
+        DepartmentPage page = resolvePageBySlug(slug);
+
+        // 숫자 ID로 접근 시 slug URL로 301 리다이렉트
+        if (slug.matches("\\d+") && page.getSlug() != null) {
+            String redirectUrl = "/page/" + page.getSlug();
+            if (serial != null) redirectUrl += "?serial=" + serial;
+            return "redirect:" + redirectUrl;
         }
 
         List<Event> events = eventService.findByPage(page.getId(), showPast, sortDesc);
@@ -193,63 +196,73 @@ public class PageController {
         return "main/page";
     }
 
-    // ── 메인 페이지 - 행사 수정 ──────────────────────────────────
-
-    @GetMapping("/page/{pageId}/events/{eventId}/edit")
-    public String editEventForm(@PathVariable Long pageId,
+    @GetMapping("/page/{slug}/events/{eventId}/edit")
+    public String editEventForm(@PathVariable String slug,
                                 @PathVariable Long eventId,
                                 @RequestParam String serial,
                                 Model model) {
-        if (!pageService.verifySerialNumber(pageId, serial)) {
-            return "redirect:/page/" + pageId;
+        DepartmentPage page = resolvePageBySlug(slug);
+        if (!pageService.verifySerialNumber(page.getId(), serial)) {
+            return "redirect:/page/" + page.getSlug();
         }
         Event event = eventService.findById(eventId);
         EventCreateDto dto = toDto(event);
-        model.addAttribute("page", pageService.findById(pageId));
+        model.addAttribute("page", page);
         model.addAttribute("event", event);
         model.addAttribute("dto", dto);
         model.addAttribute("serial", serial);
         return "main/edit";
     }
 
-    @PostMapping(value = "/page/{pageId}/events/{eventId}/edit", consumes = {"multipart/form-data"})
-    public String editEvent(@PathVariable Long pageId,
+    @PostMapping(value = "/page/{slug}/events/{eventId}/edit", consumes = {"multipart/form-data"})
+    public String editEvent(@PathVariable String slug,
                             @PathVariable Long eventId,
                             @RequestParam String serial,
                             @Valid @ModelAttribute("dto") EventCreateDto dto,
                             BindingResult bindingResult,
                             Model model,
                             RedirectAttributes redirectAttributes) {
-        if (!pageService.verifySerialNumber(pageId, serial)) {
-            return "redirect:/page/" + pageId;
+        DepartmentPage page = resolvePageBySlug(slug);
+        if (!pageService.verifySerialNumber(page.getId(), serial)) {
+            return "redirect:/page/" + page.getSlug();
         }
         if (bindingResult.hasErrors()) {
-            model.addAttribute("page", pageService.findById(pageId));
+            model.addAttribute("page", page);
             model.addAttribute("event", eventService.findById(eventId));
             model.addAttribute("serial", serial);
             return "main/edit";
         }
         eventService.update(eventId, dto);
         redirectAttributes.addFlashAttribute("successMsg", "행사가 수정되었습니다.");
-        return "redirect:/page/" + pageId + "?serial=" + serial;
+        return "redirect:/page/" + page.getSlug() + "?serial=" + serial;
     }
 
     // ── 메인 페이지 - 행사 삭제 ──────────────────────────────────
 
-    @PostMapping("/page/{pageId}/events/{eventId}/delete")
-    public String deleteEventMain(@PathVariable Long pageId,
+    @PostMapping("/page/{slug}/events/{eventId}/delete")
+    public String deleteEventMain(@PathVariable String slug,
                                   @PathVariable Long eventId,
                                   @RequestParam String serial,
                                   RedirectAttributes redirectAttributes) {
-        if (!pageService.verifySerialNumber(pageId, serial)) {
-            return "redirect:/page/" + pageId;
+        DepartmentPage page = resolvePageBySlug(slug);
+        if (!pageService.verifySerialNumber(page.getId(), serial)) {
+            return "redirect:/page/" + page.getSlug();
         }
         eventService.delete(eventId);
         redirectAttributes.addFlashAttribute("successMsg", "행사가 삭제되었습니다.");
-        return "redirect:/page/" + pageId + "?serial=" + serial;
+        return "redirect:/page/" + page.getSlug() + "?serial=" + serial;
     }
 
     // ── private ──────────────────────────────────────────────────
+
+    /** slug(문자) 또는 숫자 ID 모두 처리 */
+    private DepartmentPage resolvePageBySlug(String slug) {
+        if (slug.matches("\\d+")) {
+            return pageService.findById(Long.parseLong(slug));
+        }
+        return pageService.findBySlug(slug)
+                .orElseThrow(() -> new IllegalArgumentException("페이지를 찾을 수 없습니다."));
+    }
 
     private EventCreateDto toDto(Event event) {
         EventCreateDto dto = new EventCreateDto();
