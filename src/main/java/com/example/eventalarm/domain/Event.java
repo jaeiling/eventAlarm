@@ -24,7 +24,10 @@ public class Event {
     private String title;           // 행사명
 
     @Column(nullable = false)
-    private LocalDateTime eventDateTime;  // 행사 일시
+    private LocalDateTime eventDateTime;  // 행사 시작 일시
+
+    @Column
+    private LocalDateTime eventEndDateTime; // 행사 종료 일시 (선택, null이면 당일)
 
     @Column(nullable = false)
     private String location;        // 장소명 (예: 인천대 7호관)
@@ -73,6 +76,9 @@ public class Event {
 
     public LocalDateTime getEventDateTime() { return eventDateTime; }
     public void setEventDateTime(LocalDateTime eventDateTime) { this.eventDateTime = eventDateTime; }
+
+    public LocalDateTime getEventEndDateTime() { return eventEndDateTime; }
+    public void setEventEndDateTime(LocalDateTime eventEndDateTime) { this.eventEndDateTime = eventEndDateTime; }
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }

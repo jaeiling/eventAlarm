@@ -31,11 +31,18 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">행사 일시 <span class="required">*</span></label>
+            <label class="form-label">행사 시작 일시 <span class="required">*</span></label>
             <input type="datetime-local" th:field="*{eventDateTime}" class="form-input"
                    th:classappend="${#fields.hasErrors('eventDateTime')} ? 'input-error' : ''"/>
             <span class="form-error" th:if="${#fields.hasErrors('eventDateTime')}" th:errors="*{eventDateTime}"></span>
           </div>
+          <div class="form-group">
+            <label class="form-label">행사 종료 일시 <span class="form-hint">(여러 날 행사만)</span></label>
+            <input type="datetime-local" th:field="*{eventEndDateTime}" class="form-input"/>
+          </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label class="form-label">장소명 <span class="required">*</span></label>
             <input type="text" th:field="*{location}" class="form-input"
@@ -57,7 +64,8 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">회비</label>
-            <input type="text" th:field="*{fee}" class="form-input" placeholder="예: 20,000원"/>
+            <input type="text" th:field="*{fee}" class="form-input"
+                   placeholder="예: 20,000" inputmode="numeric" oninput="formatFee(this)"/>
           </div>
           <div class="form-group">
             <label class="form-label">계좌번호</label>
@@ -104,5 +112,6 @@
 
 </div>
 <script th:src="@{/js/imageUpload.js}"></script>
+<script th:src="@{/js/common.js}"></script>
 </body>
 </html>

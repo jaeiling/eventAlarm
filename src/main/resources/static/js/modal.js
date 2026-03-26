@@ -48,6 +48,15 @@ function openModal(cardEl) {
   document.getElementById('modalDatetime').textContent = datetime;
   document.getElementById('modalLocation').textContent = location;
 
+  // 종료일 표시
+  const endDatetime = cardEl.dataset.enddatetime || '';
+  const datetimeEl = document.getElementById('modalDatetime');
+  if (endDatetime) {
+    datetimeEl.textContent = datetime + '  ~  ' + endDatetime;
+  } else {
+    datetimeEl.textContent = datetime;
+  }
+
   // 대표 이미지
   const thumbnail = cardEl.dataset.thumbnail || '';
   const imgWrap = document.getElementById('modalImgWrap');

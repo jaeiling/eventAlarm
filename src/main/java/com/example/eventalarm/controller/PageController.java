@@ -244,6 +244,7 @@ public class PageController {
         EventCreateDto dto = new EventCreateDto();
         dto.setTitle(event.getTitle());
         dto.setEventDateTime(event.getEventDateTime());
+        dto.setEventEndDateTime(event.getEventEndDateTime());
         dto.setLocation(event.getLocation());
         dto.setLocationAddress(event.getLocationAddress());
         dto.setDescription(event.getDescription());

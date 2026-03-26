@@ -17,6 +17,9 @@ public class EventCreateDto {
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime eventDateTime;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime eventEndDateTime; // 선택 - 여러 날 행사 종료일시
+
     @NotBlank(message = "장소를 입력해주세요.")
     private String location;
 
@@ -38,6 +41,9 @@ public class EventCreateDto {
 
     public LocalDateTime getEventDateTime() { return eventDateTime; }
     public void setEventDateTime(LocalDateTime eventDateTime) { this.eventDateTime = eventDateTime; }
+
+    public LocalDateTime getEventEndDateTime() { return eventEndDateTime; }
+    public void setEventEndDateTime(LocalDateTime eventEndDateTime) { this.eventEndDateTime = eventEndDateTime; }
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }

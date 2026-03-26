@@ -100,6 +100,7 @@ public class EventService {
     private void setEventFields(Event event, EventCreateDto dto) {
         event.setTitle(dto.getTitle());
         event.setEventDateTime(dto.getEventDateTime());
+        event.setEventEndDateTime(dto.getEventEndDateTime());
         event.setLocation(dto.getLocation());
         event.setLocationAddress(dto.getLocationAddress());
         event.setDescription(dto.getDescription());
