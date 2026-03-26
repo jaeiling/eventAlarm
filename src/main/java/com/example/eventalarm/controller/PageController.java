@@ -29,7 +29,9 @@ public class PageController {
     // ── 랜딩 페이지 ──────────────────────────────────────────────
 
     @GetMapping("/")
-    public String landing() {
+    public String landing(Model model) {
+        // 등록된 학과 페이지 전체 목록 → 사용자가 바로 선택해서 진입할 수 있도록
+        model.addAttribute("pages", pageService.findAll());
         return "landing";
     }
 

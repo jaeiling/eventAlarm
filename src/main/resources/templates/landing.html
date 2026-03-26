@@ -15,10 +15,52 @@
       <h1 class="hero-title">우리 학과 행사,<br/>링크 하나로 끝</h1>
       <p class="hero-sub">개강총회·MT·행사 일정을 링크 하나로<br/>일정·장소·설명까지 한 번에 정리해드려요.</p>
       <div class="hero-btns">
-        <a th:href="@{/admin/create}" class="btn btn-primary btn-lg">📋 페이지 만들기</a>
+        <a href="#page-list" class="btn btn-primary btn-lg">🔍 학과 페이지 찾기</a>
+        <a th:href="@{/admin/create}" class="btn btn-hero-outline btn-lg">📋 페이지 만들기</a>
       </div>
     </div>
   </header>
+
+  <!-- 학과 페이지 목록 섹션 -->
+  <section class="page-list-section" id="page-list">
+    <h2 class="section-title">학과 페이지 바로가기</h2>
+
+    <!-- 검색 입력 -->
+    <div class="page-search-wrap">
+      <input type="text" id="pageSearchInput" class="page-search-input"
+             placeholder="학교 또는 학과명으로 검색" oninput="filterPages()"/>
+    </div>
+
+    <!-- 등록된 페이지가 있을 때 -->
+    <ul class="page-card-list" id="pageCardList" th:if="${!#lists.isEmpty(pages)}">
+      <li class="page-card-item" th:each="p : ${pages}"
+          th:data-name="${p.universityName + ' ' + p.departmentName}">
+        <a th:href="@{'/page/' + ${p.id}}" class="page-card-link">
+          <div class="page-card-inner">
+            <span class="page-card-icon">🏫</span>
+            <div class="page-card-text">
+              <span class="page-card-univ" th:text="${p.universityName}">대학교</span>
+              <span class="page-card-dept" th:text="${p.departmentName}">학과</span>
+            </div>
+            <span class="page-card-arrow">›</span>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+    <!-- 검색 결과 없을 때 (JS 제어) -->
+    <div class="empty-state" id="pageEmptyMsg" style="display:none">
+      <span>🔍</span>
+      <p>검색 결과가 없어요.</p>
+    </div>
+
+    <!-- 아직 등록된 페이지가 없을 때 -->
+    <div class="empty-state" th:if="${#lists.isEmpty(pages)}">
+      <span>📭</span>
+      <p>아직 등록된 학과 페이지가 없어요.<br/>과대표라면 지금 바로 만들어보세요!</p>
+      <a th:href="@{/admin/create}" class="btn btn-primary" style="margin-top:14px">페이지 만들기</a>
+    </div>
+  </section>
 
   <section class="feature-section">
     <h2 class="section-title">이런 게 가능해요</h2>
@@ -66,5 +108,26 @@
 
 </div>
 <script th:src="@{/js/common.js}"></script>
+<script>
+  function filterPages() {
+    const query = document.getElementById('pageSearchInput').value.trim().toLowerCase();
+    const items = document.querySelectorAll('#pageCardList .page-card-item');
+    const emptyMsg = document.getElementById('pageEmptyMsg');
+    let visibleCount = 0;
+
+    items.forEach(item => {
+      const name = item.dataset.name.toLowerCase();
+      if (!query || name.includes(query)) {
+        item.style.display = '';
+        visibleCount++;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+
+    // 검색 결과 없음 메시지
+    if (emptyMsg) emptyMsg.style.display = (visibleCount === 0 && query) ? 'block' : 'none';
+  }
+</script>
 </body>
 </html>

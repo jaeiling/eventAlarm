@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface DepartmentPageRepository extends JpaRepository<DepartmentPage, Long> {
     boolean existsBySerialNumber(String serialNumber);
     Optional<DepartmentPage> findBySerialNumber(String serialNumber);
+    java.util.List<DepartmentPage> findAllByOrderByCreatedAtDesc();
 }

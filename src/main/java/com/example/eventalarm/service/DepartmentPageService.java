@@ -46,6 +46,12 @@ public class DepartmentPageService {
                 .orElseThrow(() -> new IllegalArgumentException("페이지를 찾을 수 없습니다. id=" + id));
     }
 
+    /** 전체 학과 페이지 목록 (생성 최신순) */
+    @Transactional(readOnly = true)
+    public java.util.List<DepartmentPage> findAll() {
+        return repository.findAllByOrderByCreatedAtDesc();
+    }
+
     // ── private ──────────────────────────────────────────────────
 
     /** 중복 없는 6자리 랜덤 숫자 문자열 생성 */

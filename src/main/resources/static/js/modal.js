@@ -15,6 +15,13 @@ document.querySelectorAll('.dday-badge').forEach(badge => {
 
   if (diffDays > 0) {
     badge.textContent = `D-${diffDays}`;
+    if (diffDays <= 3) {
+      badge.classList.add('dday-red');    // 3일 이내 → 빨강
+    } else if (diffDays <= 7) {
+      badge.classList.add('dday-yellow'); // 4~7일 → 노랑
+    } else {
+      badge.classList.add('dday-green');  // 8일 이상 → 초록
+    }
   } else if (diffDays === 0) {
     badge.textContent = 'D-Day';
     badge.classList.add('dday-today');
@@ -44,8 +51,12 @@ function openModal(cardEl) {
   const searchQuery = encodeURIComponent(address || location);
   if (searchQuery) {
     mapBtns.innerHTML = `
-      <a href="https://map.kakao.com/link/search/${searchQuery}" target="_blank" class="map-btn map-btn-kakao">🗺 카카오맵</a>
-      <a href="https://map.naver.com/v5/search/${searchQuery}" target="_blank" class="map-btn map-btn-naver">🗺 네이버지도</a>
+      <a href="https://map.kakao.com/link/search/${searchQuery}" target="_blank" class="map-btn map-btn-kakao">
+        <img src="https://t1.kakaocdn.net/kakaocorp/kakaocorp/admin/asset/corporation/20240424094419.svg" alt="kakao" class="map-btn-icon"> 카카오맵
+      </a>
+      <a href="https://map.naver.com/v5/search/${searchQuery}" target="_blank" class="map-btn map-btn-naver">
+        <img src="https://ssl.pstatic.net/static/maps/mantle/map-icons/favicon-32x32.png" alt="naver" class="map-btn-icon"> 네이버지도
+      </a>
     `;
   }
 
