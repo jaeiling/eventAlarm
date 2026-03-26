@@ -9,4 +9,6 @@ public interface DepartmentPageRepository extends JpaRepository<DepartmentPage, 
     boolean existsBySerialNumber(String serialNumber);
     Optional<DepartmentPage> findBySerialNumber(String serialNumber);
     java.util.List<DepartmentPage> findAllByOrderByCreatedAtDesc();
+    Optional<DepartmentPage> findBySlug(String slug);
+    boolean existsBySlug(String slug);
 }

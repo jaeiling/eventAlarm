@@ -25,6 +25,9 @@ public class DepartmentPage {
     @Column(nullable = false, unique = true, length = 6)
     private String serialNumber;
 
+    @Column(unique = true)
+    private String slug; // URL 슬러그: 인천대학교-정보통신공학과
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -45,6 +48,9 @@ public class DepartmentPage {
 
     public String getSerialNumber() { return serialNumber; }
     public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
+
+    public String getSlug() { return slug; }
+    public void setSlug(String slug) { this.slug = slug; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

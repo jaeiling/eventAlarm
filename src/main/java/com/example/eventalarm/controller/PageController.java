@@ -74,6 +74,9 @@ public class PageController {
         DepartmentPage created = pageService.create(dto);
         redirectAttributes.addFlashAttribute("serialNumber", created.getSerialNumber());
         redirectAttributes.addFlashAttribute("pageId", created.getId());
+        redirectAttributes.addFlashAttribute("pageSlug", created.getSlug());
+        redirectAttributes.addFlashAttribute("shareUrl",
+                "https://event-alarm.up.railway.app/page/" + created.getSlug());
         return "redirect:/admin/created";
     }
 
@@ -161,22 +164,30 @@ public class PageController {
         return "redirect:/admin/" + pageId + "/events?serial=" + serial;
     }
 
-    // ── 메인 페이지 (공개) ───────────────────────────────────────
+    // ── 메인 페이지 (공개) - slug URL ────────────────────────────
 
-    @GetMapping("/page/{pageId}")
-    public String mainPage(@PathVariable Long pageId,
-                           @RequestParam(defaultValue = "false") boolean showPast,
-                           @RequestParam(defaultValue = "false") boolean sortDesc,
-                           @RequestParam(required = false) String serial,
-                           Model model) {
-        DepartmentPage page = pageService.findById(pageId);
-        List<Event> events = eventService.findByPage(pageId, showPast, sortDesc);
+    @GetMapping("/page/{slug}")
+    public String mainPageBySlug(@PathVariable String slug,
+                                 @RequestParam(defaultValue = "false") boolean showPast,
+                                 @RequestParam(defaultValue = "false") boolean sortDesc,
+                                 @RequestParam(required = false) String serial,
+                                 Model model) {
+        // slug가 숫자면 기존 ID 방식으로 처리
+        DepartmentPage page;
+        if (slug.matches("\\d+")) {
+            page = pageService.findById(Long.parseLong(slug));
+        } else {
+            page = pageService.findBySlug(slug)
+                    .orElseThrow(() -> new IllegalArgumentException("페이지를 찾을 수 없습니다."));
+        }
+
+        List<Event> events = eventService.findByPage(page.getId(), showPast, sortDesc);
+        boolean isAdmin = serial != null && pageService.verifySerialNumber(page.getId(), serial);
+
         model.addAttribute("page", page);
         model.addAttribute("events", events);
         model.addAttribute("showPast", showPast);
         model.addAttribute("sortDesc", sortDesc);
-        // 인증된 관리자인지 여부 전달
-        boolean isAdmin = serial != null && pageService.verifySerialNumber(pageId, serial);
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("serial", serial != null ? serial : "");
         return "main/page";

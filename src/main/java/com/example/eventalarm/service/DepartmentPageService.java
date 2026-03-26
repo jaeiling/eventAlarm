@@ -27,6 +27,7 @@ public class DepartmentPageService {
         page.setUniversityName(dto.getUniversityName());
         page.setDepartmentName(dto.getDepartmentName());
         page.setSerialNumber(generateUniqueSerialNumber());
+        page.setSlug(generateUniqueSlug(dto.getUniversityName(), dto.getDepartmentName()));
         return repository.save(page);
     }
 
@@ -52,6 +53,12 @@ public class DepartmentPageService {
         return repository.findAllByOrderByCreatedAtDesc();
     }
 
+    /** slug로 페이지 조회 */
+    @Transactional(readOnly = true)
+    public java.util.Optional<DepartmentPage> findBySlug(String slug) {
+        return repository.findBySlug(slug);
+    }
+
     // ── private ──────────────────────────────────────────────────
 
     /** 중복 없는 6자리 랜덤 숫자 문자열 생성 */
@@ -67,5 +74,20 @@ public class DepartmentPageService {
             if (maxTry <= 0) throw new IllegalStateException("일련번호 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
         } while (repository.existsBySerialNumber(serial));
         return serial;
+    }
+
+    /** 대학교명-학과명 기반 고유 slug 생성 */
+    private String generateUniqueSlug(String universityName, String departmentName) {
+        // 공백 → 하이픈, 특수문자 제거
+        String base = (universityName + "-" + departmentName)
+                .replaceAll("\\s+", "-")
+                .replaceAll("[^가-힣a-zA-Z0-9\\-]", "");
+
+        if (!repository.existsBySlug(base)) return base;
+
+        // 중복 시 뒤에 숫자 붙이기
+        int suffix = 2;
+        while (repository.existsBySlug(base + "-" + suffix)) suffix++;
+        return base + "-" + suffix;
     }
 }
