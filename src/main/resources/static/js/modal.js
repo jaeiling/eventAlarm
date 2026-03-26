@@ -10,8 +10,11 @@ document.querySelectorAll('.dday-badge').forEach(badge => {
   const eventDate = new Date(datetimeStr);
   const now = new Date();
 
-  const diffMs = eventDate - now;
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  // 자정 기준 날짜 차이 계산 (시간 무시, 날짜만 비교)
+  // 예: 오늘 오전 11시 / 행사 오후 3시 → 같은 날 → D-Day
+  const eventMidnight = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((eventMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
 
   if (diffDays > 0) {
     badge.textContent = `D-${diffDays}`;
@@ -44,6 +47,17 @@ function openModal(cardEl) {
   document.getElementById('modalTitle').textContent    = title;
   document.getElementById('modalDatetime').textContent = datetime;
   document.getElementById('modalLocation').textContent = location;
+
+  // 대표 이미지
+  const thumbnail = cardEl.dataset.thumbnail || '';
+  const imgWrap = document.getElementById('modalImgWrap');
+  const imgEl   = document.getElementById('modalImg');
+  if (thumbnail) {
+    imgEl.src = thumbnail;
+    imgWrap.style.display = 'block';
+  } else {
+    imgWrap.style.display = 'none';
+  }
 
   // 지도 버튼
   const mapBtns = document.getElementById('mapBtns');

@@ -24,7 +24,7 @@
     <section class="admin-section">
       <h2 class="section-heading">➕ 행사 등록</h2>
       <form th:action="@{'/admin/' + ${page.id} + '/events/create?serial=' + ${serial}}"
-            th:object="${newEventDto}" method="post" class="event-form">
+            th:object="${newEventDto}" method="post" enctype="multipart/form-data" class="event-form">
 
         <div class="form-row">
           <div class="form-group form-group-wide">
@@ -78,6 +78,22 @@
           </div>
         </div>
 
+        <!-- 사진 업로드 -->
+        <div class="form-group">
+          <label class="form-label">사진 <span class="form-hint">(최대 5장 · JPG/PNG/GIF/WEBP · 선택)</span></label>
+          <div class="img-upload-area" id="uploadArea" onclick="document.getElementById('imgInput').click()">
+            <span class="img-upload-icon">📷</span>
+            <p class="img-upload-text">클릭하여 사진 선택</p>
+            <p class="img-upload-sub">최대 5장, 10MB 이하</p>
+          </div>
+          <input type="file" id="imgInput" name="images" multiple accept="image/*"
+                 style="display:none" onchange="previewImages(this)"/>
+          <div class="img-preview-list" id="previewList"></div>
+        </div>
+
+        <!-- 대표 이미지 인덱스 (JS로 설정) -->
+        <input type="hidden" name="thumbnailIndex" id="thumbnailIndex" value="0"/>
+
         <button type="submit" class="btn btn-primary">등록하기</button>
       </form>
     </section>
@@ -110,6 +126,7 @@
 
   </main>
 </div>
+<script th:src="@{/js/imageUpload.js}"></script>
 <script th:src="@{/js/common.js}"></script>
 </body>
 </html>

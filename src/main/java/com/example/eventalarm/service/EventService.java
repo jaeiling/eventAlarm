@@ -2,11 +2,14 @@ package com.example.eventalarm.service;
 
 import com.example.eventalarm.domain.DepartmentPage;
 import com.example.eventalarm.domain.Event;
+import com.example.eventalarm.domain.EventImage;
 import com.example.eventalarm.dto.EventCreateDto;
 import com.example.eventalarm.repository.DepartmentPageRepository;
+import com.example.eventalarm.repository.EventImageRepository;
 import com.example.eventalarm.repository.EventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,10 +20,17 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final DepartmentPageRepository pageRepository;
+    private final EventImageRepository imageRepository;
+    private final ImageStorageService storageService;
 
-    public EventService(EventRepository eventRepository, DepartmentPageRepository pageRepository) {
+    public EventService(EventRepository eventRepository,
+                        DepartmentPageRepository pageRepository,
+                        EventImageRepository imageRepository,
+                        ImageStorageService storageService) {
         this.eventRepository = eventRepository;
         this.pageRepository = pageRepository;
+        this.imageRepository = imageRepository;
+        this.storageService = storageService;
     }
 
     /** 행사 등록 */
@@ -31,18 +41,35 @@ public class EventService {
         Event event = new Event();
         event.setDepartmentPage(page);
         setEventFields(event, dto);
-        return eventRepository.save(event);
+        eventRepository.save(event);
+
+        // 이미지 저장
+        saveImages(event, dto);
+        return event;
     }
 
     /** 행사 수정 */
     public Event update(Long eventId, EventCreateDto dto) {
         Event event = findById(eventId);
         setEventFields(event, dto);
+
+        // 새 이미지가 있으면 기존 이미지 삭제 후 재등록
+        if (dto.getImages() != null && dto.getImages().stream().anyMatch(f -> !f.isEmpty())) {
+            // 기존 이미지 파일 삭제
+            imageRepository.findByEventIdOrderBySortOrderAsc(eventId)
+                    .forEach(img -> storageService.delete(img.getStoredFileName()));
+            imageRepository.deleteByEventId(eventId);
+            event.getImages().clear();
+            saveImages(event, dto);
+        }
         return event;
     }
 
     /** 행사 삭제 */
     public void delete(Long eventId) {
+        // 이미지 파일 먼저 삭제
+        imageRepository.findByEventIdOrderBySortOrderAsc(eventId)
+                .forEach(img -> storageService.delete(img.getStoredFileName()));
         eventRepository.deleteById(eventId);
     }
 
@@ -55,8 +82,6 @@ public class EventService {
 
     /**
      * 목록 조회
-     * @param showPast true면 지난 행사 포함, false면 미래만
-     * @param sortDesc true면 오래 남은순(내림차순), false면 임박순(오름차순)
      */
     @Transactional(readOnly = true)
     public List<Event> findByPage(Long pageId, boolean showPast, boolean sortDesc) {
@@ -80,5 +105,28 @@ public class EventService {
         event.setDescription(dto.getDescription());
         event.setFee(dto.getFee());
         event.setBankAccount(dto.getBankAccount());
+    }
+
+    private void saveImages(Event event, EventCreateDto dto) {
+        List<MultipartFile> files = dto.getImages();
+        if (files == null || files.isEmpty()) return;
+
+        int thumbnailIndex = dto.getThumbnailIndex();
+        int order = 0;
+        for (int i = 0; i < Math.min(files.size(), 5); i++) {
+            MultipartFile file = files.get(i);
+            if (file == null || file.isEmpty()) continue;
+
+            String stored = storageService.store(file);
+            if (stored == null) continue;
+
+            EventImage img = new EventImage();
+            img.setEvent(event);
+            img.setStoredFileName(stored);
+            img.setOriginalFileName(file.getOriginalFilename());
+            img.setThumbnail(i == thumbnailIndex);
+            img.setSortOrder(order++);
+            imageRepository.save(img);
+        }
     }
 }

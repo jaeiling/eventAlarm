@@ -2,6 +2,8 @@ package com.example.eventalarm.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 행사 엔티티
@@ -38,6 +40,10 @@ public class Event {
 
     @Column
     private String bankAccount;     // 계좌번호 (예: 카카오뱅크 3333-00-0000000 홍길동)
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("sortOrder ASC")
+    private List<EventImage> images = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -82,6 +88,15 @@ public class Event {
 
     public String getBankAccount() { return bankAccount; }
     public void setBankAccount(String bankAccount) { this.bankAccount = bankAccount; }
+
+    public List<EventImage> getImages() { return images; }
+    public void setImages(List<EventImage> images) { this.images = images; }
+
+    /** 대표 이미지 반환 (없으면 첫 번째, 그것도 없으면 null) */
+    public EventImage getThumbnailImage() {
+        return images.stream().filter(EventImage::isThumbnail).findFirst()
+                .orElse(images.isEmpty() ? null : images.get(0));
+    }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

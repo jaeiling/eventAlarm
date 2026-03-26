@@ -77,14 +77,14 @@
       dot.className = 'event-dot';
       cell.appendChild(dot);
 
-      // 툴팁 (여러 행사면 줄 바꿈)
+      // 툴팁 (hover 시만 표시, 클릭 시 모달 오픈)
       const tooltip = document.createElement('div');
       tooltip.className = 'cal-tooltip';
       tooltip.textContent = events.map(e => e.title).join(' / ');
-      cell.appendChild(tooltip);
 
-      // 클릭 → 해당 행사 카드 스크롤 + 모달 열기
-      cell.addEventListener('click', () => {
+      // 툴팁 클릭 → 해당 행사 카드 스크롤 + 모달 열기
+      tooltip.addEventListener('click', (e) => {
+        e.stopPropagation();
         const firstEvent = events[0];
         const card = document.querySelector(`.event-card[data-id="${firstEvent.id}"]`);
         if (card) {
@@ -92,6 +92,8 @@
           setTimeout(() => openModal(card), 300);
         }
       });
+
+      cell.appendChild(tooltip);
     }
 
     return cell;

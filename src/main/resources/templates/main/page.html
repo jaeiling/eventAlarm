@@ -15,7 +15,16 @@
     <div class="main-header-info">
       <p class="main-univ" th:text="${page.universityName}">대학교명</p>
       <h1 class="main-dept" th:text="${page.departmentName}">학과명</h1>
-    </div>
+      <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
     <a th:href="@{'/admin/' + ${page.id} + '/verify'}" class="top-bar-link">관리 🔐</a>
   </header>
 
@@ -27,11 +36,38 @@
         <button class="cal-nav" id="prevMonth">‹</button>
         <span class="cal-title" id="calTitle"></span>
         <button class="cal-nav" id="nextMonth">›</button>
-      </div>
+        <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
       <div class="cal-grid-head">
         <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
-      </div>
-      <div class="cal-grid" id="calGrid"></div>
+        <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+      <div class="cal-grid" id="calGrid">  <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
     </section>
 
     <!-- ② 필터 -->
@@ -43,7 +79,16 @@
            class="filter-chip" th:classappend="${!showPast && sortDesc} ? ' active' : ''">오래 남은순</a>
         <a th:href="@{'/page/' + ${page.id}(showPast=true, sortDesc=false)}"
            class="filter-chip" th:classappend="${showPast} ? ' active' : ''">지난 것도 표시</a>
-      </div>
+        <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
     </section>
 
     <!-- ③ 행사 목록 -->
@@ -51,7 +96,16 @@
       <div th:if="${#lists.isEmpty(events)}" class="empty-state">
         <span>📭</span>
         <p>등록된 행사가 없어요.</p>
-      </div>
+        <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
 
       <ul class="event-list" th:if="${!#lists.isEmpty(events)}">
         <li class="event-card"
@@ -64,12 +118,22 @@
             th:data-desc="${event.description}"
             th:data-fee="${event.fee}"
             th:data-account="${event.bankAccount}"
+            th:data-thumbnail="${event.thumbnailImage != null ? '/uploads/' + event.thumbnailImage.storedFileName : ''}"
             onclick="openModal(this)">
 
           <!-- D-day 뱃지 -->
           <div class="event-card-left">
             <span class="dday-badge" th:data-datetime="${event.eventDateTime}"></span>
-          </div>
+            <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
 
           <div class="event-card-body">
             <p class="event-card-title" th:text="${event.title}">행사명</p>
@@ -77,9 +141,37 @@
               <span th:text="${#temporals.format(event.eventDateTime, 'MM.dd (E) HH:mm')}"></span>
               · <span th:text="${event.location}"></span>
             </p>
-          </div>
+            <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
 
-          <span class="event-card-arrow">›</span>
+</div>
+
+          <!-- 관리자 수정/삭제 버튼 (인증된 경우만 표시) -->
+          <div class="event-card-admin" th:if="${isAdmin}" onclick="event.stopPropagation()">
+            <a th:href="@{'/page/' + ${page.id} + '/events/' + ${event.id} + '/edit?serial=' + ${serial}}"
+               class="btn-admin-edit">수정</a>
+            <form th:action="@{'/page/' + ${page.id} + '/events/' + ${event.id} + '/delete?serial=' + ${serial}}"
+                  method="post" onsubmit="return confirm('정말 삭제하시겠어요?')">
+              <button type="submit" class="btn-admin-delete">삭제</button>
+            </form>
+            <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+
+          <span class="event-card-arrow" th:unless="${isAdmin}">›</span>
         </li>
       </ul>
     </section>
@@ -87,31 +179,108 @@
   </main>
 
   <!-- ④ 행사 상세 모달 -->
-  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">  <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
   <div class="modal-sheet" id="modalSheet">
-    <div class="modal-handle"></div>
+    <div class="modal-handle">  <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
     <button class="modal-close" onclick="closeModal()">✕</button>
 
     <div class="modal-body">
       <h2 class="modal-title" id="modalTitle"></h2>
 
+      <!-- 대표 이미지 -->
+      <div class="modal-img-wrap" id="modalImgWrap" style="display:none">
+        <img id="modalImg" src="" alt="행사 이미지" class="modal-img"/>
+        <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+
       <div class="modal-row">
         <span class="modal-icon">📅</span>
         <span class="modal-text" id="modalDatetime"></span>
-      </div>
+        <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
 
       <div class="modal-row">
         <span class="modal-icon">📍</span>
         <div>
           <p class="modal-text" id="modalLocation"></p>
-          <div class="map-btns" id="mapBtns"></div>
-        </div>
-      </div>
+          <div class="map-btns" id="mapBtns">  <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+          <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+        <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
 
       <div class="modal-row" id="descRow" style="display:none">
         <span class="modal-icon">📝</span>
         <p class="modal-text modal-desc" id="modalDesc"></p>
-      </div>
+        <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
 
       <div class="modal-row" id="feeRow" style="display:none">
         <span class="modal-icon">💸</span>
@@ -120,10 +289,64 @@
           <div class="account-wrap" id="accountWrap" style="display:none">
             <span class="modal-text account-text" id="modalAccount"></span>
             <button class="copy-btn-sm" id="copyAccountBtn" onclick="copyAccount()">복사</button>
-          </div>
-        </div>
-      </div>
-    </div>
+            <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+          <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+        <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+      <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+    <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+  </div>
+
+</div>
+
+  <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
+  <div th:unless="${isAdmin}" class="admin-float-wrap">
+    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+  </div>
+  <!-- 관리자 인증 완료 배너 -->
+  <div th:if="${isAdmin}" class="admin-banner">
+    ✅ 관리자 모드 · 수정/삭제가 가능합니다
   </div>
 
 </div>

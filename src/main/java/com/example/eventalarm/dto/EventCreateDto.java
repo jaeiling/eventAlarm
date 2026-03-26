@@ -3,8 +3,10 @@ package com.example.eventalarm.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class EventCreateDto {
 
@@ -18,13 +20,16 @@ public class EventCreateDto {
     @NotBlank(message = "장소를 입력해주세요.")
     private String location;
 
-    private String locationAddress; // 지도 검색용 주소
-
+    private String locationAddress;
     private String description;
-
     private String fee;
-
     private String bankAccount;
+
+    // 이미지 (최대 5장, 선택)
+    private List<MultipartFile> images;
+
+    // 대표 이미지 인덱스 (0-based, 기본 0)
+    private int thumbnailIndex = 0;
 
     // ── Getters & Setters ──
 
@@ -48,4 +53,10 @@ public class EventCreateDto {
 
     public String getBankAccount() { return bankAccount; }
     public void setBankAccount(String bankAccount) { this.bankAccount = bankAccount; }
+
+    public List<MultipartFile> getImages() { return images; }
+    public void setImages(List<MultipartFile> images) { this.images = images; }
+
+    public int getThumbnailIndex() { return thumbnailIndex; }
+    public void setThumbnailIndex(int thumbnailIndex) { this.thumbnailIndex = thumbnailIndex; }
 }

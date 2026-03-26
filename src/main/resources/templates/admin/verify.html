@@ -24,6 +24,7 @@
       <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
 
       <form th:action="@{'/admin/' + ${pageId} + '/verify'}" method="post" class="form-body">
+        <input type="hidden" name="from" th:value="${from}"/>
         <div class="form-group">
           <label class="form-label">6자리 관리 번호</label>
           <input type="text" name="serialNumber" maxlength="6"

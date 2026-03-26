@@ -38,3 +38,6 @@ out/
 
 ### Private Info ###
 .env
+
+### Upload files (로컬 업로드 파일은 git에 포함하지 않음) ###
+uploads/
