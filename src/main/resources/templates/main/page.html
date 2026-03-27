@@ -11,15 +11,15 @@
 
   <!-- 상단 헤더 -->
   <header class="main-header">
-    <a th:href="@{/}" class="back-btn">← 홈</a>
+    <a th:href="@{/}" class="back-btn">🏠 홈</a>
     <div class="main-header-info">
       <a th:href="@{'/page/' + ${page.slug}}" style="text-decoration:none; color:inherit; display:block; text-align:center;">
         <p class="main-univ" th:text="${page.universityName}">대학교명</p>
         <h1 class="main-dept" th:text="${page.departmentName}">학과명</h1>
       </a>
     </div>
-    <a th:unless="${isAdmin}" th:href="@{'/admin/' + ${page.id} + '/verify'}" class="top-bar-link">관리 🔐</a>
-    <a th:if="${isAdmin}" th:href="@{'/admin/' + ${page.id} + '/events'}" class="top-bar-link">관리 패널 →</a>
+    <a th:unless="${isAdmin}" th:href="@{'/admin/' + ${page.id} + '/verify'}" class="top-bar-link">관리 🔒</a>
+    <a th:if="${isAdmin}" th:href="@{'/admin/' + ${page.id} + '/events'}" class="top-bar-link">관리 🔒</a>
   </header>
 
   <!-- 학과 소개 -->
