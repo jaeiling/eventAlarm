@@ -135,14 +135,14 @@
       const rowAssignments = assignments.filter(a => Math.floor(a.segStart / 7) === row);
       const maxLane = rowAssignments.length > 0
         ? Math.max(...rowAssignments.map(a => a.lane)) : -1;
-      rowEl.style.minHeight = `${52 + (maxLane + 1) * 20}px`;
+      rowEl.style.minHeight = `${60 + (maxLane + 1) * 22}px`;
 
       rowAssignments.forEach(a => {
         const col0     = a.segStart % 7;
         const col1     = a.segEnd   % 7;
         const leftPct  = (col0 / 7) * 100;
         const widthPct = ((col1 - col0 + 1) / 7) * 100;
-        const topPx    = 30 + a.lane * 20;
+        const topPx    = 36 + a.lane * 22;
 
         const band = document.createElement('div');
         band.className = 'cal-band';
