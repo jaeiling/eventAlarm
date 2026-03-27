@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>슈퍼 관리자 대시보드 - 모행</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}"/>
+  <style>
+    .sa-wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 80px; }
+    .sa-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .sa-title { font-size: 20px; font-weight: 700; color: #1a1a2e; }
+    .sa-count { font-size: 13px; color: #888; margin-top: 2px; }
+    .sa-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .sa-table th { background: #f5f5fa; font-size: 12px; font-weight: 600; color: #666; padding: 10px 14px; text-align: left; }
+    .sa-table td { padding: 12px 14px; font-size: 14px; color: #333; border-top: 1px solid #f0f0f0; vertical-align: middle; }
+    .sa-table tr:hover td { background: #fafafa; }
+    .sa-slug { font-size: 12px; color: #888; font-family: monospace; }
+    .sa-serial { font-size: 12px; color: #aaa; font-family: monospace; }
+    .sa-actions { display: flex; gap: 6px; }
+    .btn-sa-edit { padding: 4px 12px; font-size: 12px; border-radius: 6px; background: #f0f0f7; color: #5c6bc0; border: none; cursor: pointer; text-decoration: none; }
+    .btn-sa-edit:hover { background: #e3e3f3; }
+    .btn-sa-del { padding: 4px 12px; font-size: 12px; border-radius: 6px; background: #fff0f0; color: #e53935; border: none; cursor: pointer; }
+    .btn-sa-del:hover { background: #ffe0e0; }
+    .btn-sa-view { padding: 4px 12px; font-size: 12px; border-radius: 6px; background: #f0f7f0; color: #43a047; border: none; cursor: pointer; text-decoration: none; }
+    .btn-sa-view:hover { background: #e0f2e0; }
+    .sa-empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+    .alert-success { background: #e8f5e9; color: #2e7d32; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; }
+  </style>
+</head>
+<body>
+<div class="sa-wrap">
+  <div class="sa-header">
+    <div>
+      <div class="sa-title">🗂 슈퍼 관리자</div>
+      <div class="sa-count" th:text="${pages.size()} + '개 페이지'"></div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="/admin/create" class="btn btn-primary" style="font-size:13px; padding:8px 14px;">+ 페이지 등록</a>
+      <form action="/superadmin/logout" method="post">
+        <button type="submit" class="btn btn-outline" style="font-size:13px; padding:8px 14px;">로그아웃</button>
+      </form>
+    </div>
+  </div>
+
+  <div th:if="${successMsg}" class="alert-success" th:text="${successMsg}"></div>
+  <div th:if="${error}" style="background:#fff0f0; color:#e53935; border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:14px;" th:text="${error}"></div>
+
+  <th:block th:if="${pages.isEmpty()}">
+    <div class="sa-empty">등록된 페이지가 없습니다.</div>
+  </th:block>
+
+  <table class="sa-table" th:unless="${pages.isEmpty()}">
+    <thead>
+      <tr>
+        <th>학교 / 학과</th>
+        <th>Slug</th>
+        <th>시리얼</th>
+        <th>등록일</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="page : ${pages}">
+        <td>
+          <div th:text="${page.universityName}"></div>
+          <div style="font-size:12px; color:#888;" th:text="${page.departmentName}"></div>
+        </td>
+        <td class="sa-slug" th:text="${page.slug}"></td>
+        <td class="sa-serial" th:text="${page.serialNumber}"></td>
+        <td style="font-size:12px; color:#aaa;" th:text="${#temporals.format(page.createdAt, 'yy.MM.dd')}"></td>
+        <td>
+          <div class="sa-actions">
+            <a th:href="@{'/page/' + ${page.slug}}" class="btn-sa-view" target="_blank">보기</a>
+            <a th:href="@{'/superadmin/pages/' + ${page.id} + '/edit'}" class="btn-sa-edit">수정</a>
+            <form th:action="@{'/superadmin/pages/' + ${page.id} + '/delete'}" method="post"
+                  onsubmit="return confirm('정말 삭제하시겠어요? 행사 데이터도 모두 삭제됩니다.')">
+              <button type="submit" class="btn-sa-del">삭제</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

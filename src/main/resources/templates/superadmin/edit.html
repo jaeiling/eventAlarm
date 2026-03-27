@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>페이지 수정 - 모행</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}"/>
+</head>
+<body>
+<div class="page-wrap">
+  <header class="top-bar">
+    <a href="/superadmin/dashboard" class="back-btn">← 대시보드</a>
+    <span class="top-bar-title">페이지 수정</span>
+  </header>
+
+  <main class="form-container">
+    <div class="form-card">
+      <div class="form-icon">✏️</div>
+      <h1 class="form-title" th:text="${page.universityName} + ' ' + ${page.departmentName}"></h1>
+
+      <form th:action="@{'/superadmin/pages/' + ${page.id} + '/edit'}" method="post" class="form-body">
+
+        <div class="form-group">
+          <label class="form-label">학교명 <span class="required">*</span></label>
+          <input type="text" name="universityName" class="form-input"
+                 th:value="${page.universityName}" required/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">학과명 <span class="required">*</span></label>
+          <input type="text" name="departmentName" class="form-input"
+                 th:value="${page.departmentName}" required/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Slug <span class="form-hint">(URL 주소)</span></label>
+          <input type="text" name="slug" class="form-input"
+                 th:value="${page.slug}" placeholder="예: 인천대학교-정보통신공학과"/>
+          <span class="form-hint" style="display:block; margin-top:4px;">
+            공개 URL: event-alarm.up.railway.app/page/<strong th:text="${page.slug}"></strong>
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">시리얼 번호 <span class="form-hint">(읽기 전용)</span></label>
+          <input type="text" class="form-input" th:value="${page.serialNumber}" disabled
+                 style="background:#f5f5f5; color:#aaa;"/>
+        </div>
+
+        <div class="form-row" style="gap:10px; margin-top:8px;">
+          <button type="submit" class="btn btn-primary btn-full">수정 완료</button>
+          <a href="/superadmin/dashboard" class="btn btn-outline btn-full">취소</a>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+</body>
+</html>

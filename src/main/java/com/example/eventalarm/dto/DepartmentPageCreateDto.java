@@ -15,4 +15,9 @@ public class DepartmentPageCreateDto {
 
     public String getDepartmentName() { return departmentName; }
     public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+
+    private String description;
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 }

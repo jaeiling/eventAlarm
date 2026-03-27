@@ -1,7 +1,6 @@
 package com.example.eventalarm.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -10,23 +9,24 @@ import java.util.List;
 
 public class EventCreateDto {
 
-    @NotBlank(message = "행사명을 입력해주세요.")
+    @NotBlank(message = "제목을 입력해주세요.")
     private String title;
 
-    @NotNull(message = "행사 일시를 입력해주세요.")
+    private String postType = "EVENT"; // EVENT(행사) / NOTICE(공지)
+
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    private LocalDateTime eventDateTime;
+    private LocalDateTime eventDateTime; // 공지글이면 null 가능
 
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime eventEndDateTime; // 선택 - 여러 날 행사 종료일시
 
-    @NotBlank(message = "장소를 입력해주세요.")
-    private String location;
+    private String location; // 공지글이면 null 가능
 
     private String locationAddress;
     private String description;
     private String fee;
     private String bankAccount;
+    private String link; // 외부 링크 (선택)
 
     // 이미지 (최대 5장, 선택)
     private List<MultipartFile> images;
@@ -38,6 +38,9 @@ public class EventCreateDto {
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    public String getPostType() { return postType != null ? postType : "EVENT"; }
+    public void setPostType(String postType) { this.postType = postType; }
 
     public LocalDateTime getEventDateTime() { return eventDateTime; }
     public void setEventDateTime(LocalDateTime eventDateTime) { this.eventDateTime = eventDateTime; }
@@ -59,6 +62,9 @@ public class EventCreateDto {
 
     public String getBankAccount() { return bankAccount; }
     public void setBankAccount(String bankAccount) { this.bankAccount = bankAccount; }
+
+    public String getLink() { return link; }
+    public void setLink(String link) { this.link = link; }
 
     public List<MultipartFile> getImages() { return images; }
     public void setImages(List<MultipartFile> images) { this.images = images; }

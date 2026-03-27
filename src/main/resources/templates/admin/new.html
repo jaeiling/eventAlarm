@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>행사 등록 - 모행</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}"/>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="top-bar">
+    <a th:href="@{'/admin/' + ${page.id} + '/events'}" class="back-btn">← 목록</a>
+    <span class="top-bar-title">새 행사 등록</span>
+  </header>
+
+  <main class="admin-wrap">
+
+    <!-- 행사 등록 폼 -->
+    <section class="admin-section">
+      <form th:action="@{'/admin/' + ${page.id} + '/events/create'}"
+            th:object="${newEventDto}" method="post" enctype="multipart/form-data" class="event-form"
+            onsubmit="return validateEventForm(this)">
+
+        <p class="form-required-legend"><span class="required">*</span> 필수 항목</p>
+
+        <!-- 종류 선택 -->
+        <div class="form-group">
+          <label class="form-label">종류 <span class="required">*</span></label>
+          <div class="type-toggle">
+            <label class="type-btn">
+              <input type="radio" th:field="*{postType}" value="EVENT" onchange="togglePostType(this.form)"> 행사
+            </label>
+            <label class="type-btn">
+              <input type="radio" th:field="*{postType}" value="NOTICE" onchange="togglePostType(this.form)"> 공지
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">제목 <span class="required">*</span></label>
+          <input type="text" th:field="*{title}" class="form-input" placeholder="예: 2025 개강총회"
+                 th:classappend="${#fields.hasErrors('title')} ? 'input-error' : ''"/>
+          <span class="form-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
+        </div>
+
+        <!-- 행사 전용 필드 -->
+        <div id="eventOnlyFields">
+          <div class="form-row form-row-stack">
+            <div class="form-group">
+              <label class="form-label">시작 일시 <span class="required">*</span></label>
+              <input type="datetime-local" th:field="*{eventDateTime}" class="form-input" id="eventDateTimeInput" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">종료 일시 <span class="form-hint">(여러 날 행사만)</span></label>
+              <input type="datetime-local" th:field="*{eventEndDateTime}" class="form-input"/>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">장소명 <span class="required">*</span></label>
+            <input type="text" th:field="*{location}" class="form-input" placeholder="예: 인천대 7호관 101호"/>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">지도 검색 주소 <span class="form-hint">(카카오맵·네이버지도)</span></label>
+            <input type="text" th:field="*{locationAddress}" class="form-input"
+                   placeholder="예: 인천광역시 연수구 아카데미로 119"/>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">회비</label>
+              <input type="text" id="feeInput" th:field="*{fee}" class="form-input"
+                     placeholder="예: 20,000" inputmode="numeric" oninput="formatFee(this)"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">입금 계좌</label>
+              <input type="text" th:field="*{bankAccount}" class="form-input"
+                     placeholder="카카오뱅크 3333-00-000"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">내용·설명</label>
+          <textarea th:field="*{description}" class="form-textarea" rows="3"
+                    placeholder="상세 내용을 입력해주세요."></textarea>
+        </div>
+
+        <!-- 사진 업로드 -->
+        <div class="form-group">
+          <label class="form-label">사진 <span class="form-hint">(최대 10장 · JPG/PNG/GIF/WEBP)</span></label>
+          <div class="img-upload-area" id="uploadArea" onclick="document.getElementById('imgInput').click()">
+            <span class="img-upload-icon">📷</span>
+            <p class="img-upload-text">클릭하여 사진 선택</p>
+            <p class="img-upload-sub">최대 10장, 10MB 이하</p>
+          </div>
+          <input type="file" id="imgInput" name="images" multiple accept="image/*"
+                 style="display:none" onchange="previewImages(this)"/>
+          <div class="img-preview-list" id="previewList"></div>
+        </div>
+        <input type="hidden" name="thumbnailIndex" id="thumbnailIndex" value="0"/>
+
+        <div class="form-group">
+          <label class="form-label">링크 <span class="form-hint">(선택 · 외부 URL)</span></label>
+          <input type="url" th:field="*{link}" class="form-input" placeholder="예: https://forms.gle/..."/>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px; padding:15px; font-size:16px;">등록하기</button>
+      </form>
+    </section>
+
+    <!-- 실시간 미리보기 -->
+    <section class="admin-section">
+      <h2 class="section-heading">👁️ 미리보기</h2>
+      <ul class="event-list">
+        <li class="event-card" id="previewCard" style="cursor:default; pointer-events:none;">
+          <div class="event-card-left">
+            <span class="dday-badge" id="previewBadge">D-?</span>
+            <span class="notice-badge" id="previewNoticeBadge" style="display:none">공지</span>
+          </div>
+          <div class="event-card-body">
+            <p class="event-card-title" id="previewTitle" style="color:var(--text-muted)">제목을 입력하세요</p>
+            <p class="event-card-meta" id="previewMeta"></p>
+            <p class="event-card-desc" id="previewDesc"></p>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+<script th:src="@{/js/imageUpload.js}"></script>
+<script th:src="@{/js/common.js}"></script>
+<script>
+function togglePostType(form) {
+  const isNotice = form.querySelector('input[name="postType"]:checked').value === 'NOTICE';
+  form.querySelector('#eventOnlyFields').style.display = isNotice ? 'none' : '';
+  const dtInput = form.querySelector('#eventDateTimeInput');
+  if (dtInput) dtInput.required = !isNotice;
+  updatePreview();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('.event-form');
+  if (form) togglePostType(form);
+  ['title', 'eventDateTime', 'location', 'description'].forEach(name => {
+    const el = form.querySelector(`[name="${name}"]`);
+    if (el) el.addEventListener('input', updatePreview);
+  });
+  form.querySelectorAll('input[name="postType"]').forEach(r => r.addEventListener('change', updatePreview));
+});
+
+function updatePreview() {
+  const form = document.querySelector('.event-form');
+  if (!form) return;
+  const isNotice = form.querySelector('input[name="postType"]:checked')?.value === 'NOTICE';
+  const title    = form.querySelector('[name="title"]')?.value || '';
+  const dt       = form.querySelector('[name="eventDateTime"]')?.value || '';
+  const location = form.querySelector('[name="location"]')?.value || '';
+  const desc     = form.querySelector('[name="description"]')?.value || '';
+
+  document.getElementById('previewTitle').textContent = title || '제목을 입력하세요';
+  document.getElementById('previewTitle').style.color = title ? 'var(--text)' : 'var(--text-muted)';
+
+  const badge = document.getElementById('previewBadge');
+  const noticeBadge = document.getElementById('previewNoticeBadge');
+  if (isNotice) {
+    badge.style.display = 'none';
+    noticeBadge.style.display = '';
+  } else {
+    badge.style.display = '';
+    noticeBadge.style.display = 'none';
+    if (dt) {
+      const eventDate = new Date(dt);
+      const today = new Date();
+      const diffMs = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate())
+                   - new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const diffDays = Math.round(diffMs / 86400000);
+      badge.className = 'dday-badge';
+      if (diffDays > 0) {
+        badge.textContent = 'D-' + diffDays;
+        badge.classList.add(diffDays <= 3 ? 'dday-red' : diffDays <= 7 ? 'dday-yellow' : 'dday-green');
+      } else if (diffDays === 0) {
+        badge.textContent = 'D-Day'; badge.classList.add('dday-today');
+      } else {
+        badge.textContent = 'D+' + Math.abs(diffDays); badge.classList.add('dday-past');
+      }
+    } else {
+      badge.textContent = 'D-?'; badge.className = 'dday-badge';
+    }
+  }
+
+  let meta = '';
+  if (!isNotice && dt) {
+    const d = new Date(dt);
+    const days = ['일','월','화','수','목','금','토'];
+    meta = `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${days[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    if (location) meta += ' · ' + location;
+  } else if (isNotice) {
+    meta = '공지사항';
+  }
+  document.getElementById('previewMeta').textContent = meta;
+  document.getElementById('previewDesc').textContent = desc;
+}
+
+function validateEventForm(form) {
+  const isNotice = form.querySelector('input[name="postType"]:checked')?.value === 'NOTICE';
+  if (!isNotice) {
+    const dt = form.querySelector('#eventDateTimeInput')?.value;
+    if (!dt) {
+      alert('행사 시작 일시를 입력해주세요.');
+      form.querySelector('#eventDateTimeInput')?.focus();
+      return false;
+    }
+  }
+  return true;
+}
+</script>
+</body>
+</html>

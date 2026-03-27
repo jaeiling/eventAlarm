@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>행사알리미 - 우리 학과 행사 한눈에</title>
+  <title>모행 - 모두의 행사</title>
   <link rel="stylesheet" th:href="@{/css/common.css}"/>
 </head>
 <body>
 <div class="landing-wrap">
 
+
+  <!-- 히어로 -->
   <header class="landing-hero">
     <div class="hero-particles">
       <div class="hero-particle"></div>
@@ -17,31 +19,25 @@
       <div class="hero-particle"></div>
       <div class="hero-particle"></div>
       <div class="hero-particle"></div>
-      <div class="hero-particle"></div>
-      <div class="hero-particle"></div>
     </div>
     <div class="hero-inner">
-      <div class="hero-badge">📣 행사 안내 서비스</div>
-      <h1 class="hero-title">우리 학과 행사,<br/>링크 하나로 끝</h1>
-      <p class="hero-sub">개강총회·MT·행사 일정을 링크 하나로<br/>일정·장소·설명까지 한 번에 정리해드려요.</p>
+      <h1 class="hero-title">모두의 행사,<br/>한 곳에서</h1>
+      <p class="hero-sub">개강총회·MT·행사를 링크 하나로<br/>일정·장소·회비까지 한 번에</p>
       <div class="hero-btns">
-        <a href="#page-list" class="btn btn-primary btn-lg">🔍 학과 페이지 찾기</a>
-        <a th:href="@{/admin/create}" class="btn btn-hero-outline btn-lg">📋 페이지 만들기</a>
+        <a href="#page-list" class="btn btn-primary btn-lg">학과 페이지 찾기</a>
+        <a th:href="@{/admin/create}" class="btn btn-hero-outline btn-lg">페이지 만들기</a>
       </div>
     </div>
   </header>
 
-  <!-- 학과 페이지 목록 섹션 -->
+  <!-- 학과 페이지 검색 -->
   <section class="page-list-section" id="page-list">
-    <h2 class="section-title">학과 페이지 바로가기</h2>
-
-    <!-- 검색 입력 -->
+    <h2 class="section-title">학과 페이지 찾기</h2>
     <div class="page-search-wrap">
       <input type="text" id="pageSearchInput" class="page-search-input"
              placeholder="학교 또는 학과명으로 검색" oninput="filterPages()"/>
     </div>
 
-    <!-- 등록된 페이지가 있을 때 -->
     <ul class="page-card-list" id="pageCardList" th:if="${!#lists.isEmpty(pages)}" style="display:none">
       <li class="page-card-item" th:each="p : ${pages}"
           th:data-name="${p.universityName + ' ' + p.departmentName}">
@@ -58,52 +54,52 @@
       </li>
     </ul>
 
-    <!-- 검색 결과 없을 때 (JS 제어) -->
     <div class="empty-state" id="pageEmptyMsg" style="display:none">
       <span>🔍</span>
       <p>검색 결과가 없어요.</p>
     </div>
 
-    <!-- 아직 등록된 페이지가 없을 때 -->
     <div class="empty-state" th:if="${#lists.isEmpty(pages)}">
       <span>📭</span>
-      <p>아직 등록된 학과 페이지가 없어요.<br/>과대표라면 지금 바로 만들어보세요!</p>
+      <p>아직 등록된 학과 페이지가 없어요.</p>
       <a th:href="@{/admin/create}" class="btn btn-primary" style="margin-top:14px">페이지 만들기</a>
     </div>
   </section>
 
+  <!-- 기능 소개 -->
   <section class="feature-section">
     <h2 class="section-title">이런 게 가능해요</h2>
     <div class="feature-grid">
       <div class="feature-card">
         <span class="feature-icon">📅</span>
         <h3>행사 달력</h3>
-        <p>행사 있는 날짜를 달력에서 한눈에 확인하고 클릭으로 바로 이동</p>
+        <p>행사 날짜를 달력에서 한눈에 확인</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">🗺️</span>
         <h3>지도 바로가기</h3>
-        <p>카카오맵·네이버지도 버튼으로 장소를 바로 검색</p>
+        <p>카카오맵·네이버지도로 바로 검색</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">💸</span>
         <h3>회비·계좌 안내</h3>
-        <p>계좌번호 한 번 탭으로 복사, 송금까지 빠르게</p>
+        <p>계좌번호 탭 한 번으로 복사</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">📱</span>
         <h3>모바일 최적화</h3>
-        <p>스마트폰에서도 깔끔하게 보이는 UI</p>
+        <p>스마트폰에서도 깔끔한 UI</p>
       </div>
     </div>
   </section>
 
+  <!-- 시작 방법 -->
   <section class="how-section">
     <h2 class="section-title">3단계로 시작해요</h2>
     <ol class="how-list">
-      <li><strong>01</strong> 우리 학과 페이지 생성 <span class="how-sub">→ 6자리 관리 번호 발급</span></li>
+      <li><strong>01</strong> 학과 페이지 생성 <span class="how-sub">→ 6자리 관리 번호 발급</span></li>
       <li><strong>02</strong> 행사 정보 등록 <span class="how-sub">→ 제목·일시·장소·회비 입력</span></li>
-      <li><strong>03</strong> 링크 공유 <span class="how-sub">→ 카카오톡·인스타그램 등에 링크 하나만 뿌리면 끝</span></li>
+      <li><strong>03</strong> 링크 공유 <span class="how-sub">→ 카카오톡·인스타에 링크 하나만</span></li>
     </ol>
   </section>
 
@@ -112,7 +108,8 @@
   </div>
 
   <footer class="landing-footer">
-    <p>행사알리미 · MVP 버전</p>
+    <p class="landing-footer-logo">모행</p>
+    <p>모두의 행사 · MVP</p>
     <p>ⓒ 2026. 횃불이유괴단 All Rights Reserved.</p>
   </footer>
 
@@ -126,14 +123,12 @@
     const pageCardList = document.getElementById('pageCardList');
     let visibleCount = 0;
 
-    // 검색어 없으면 목록 전체 숨김
     if (!query) {
       if (pageCardList) pageCardList.style.display = 'none';
       if (emptyMsg) emptyMsg.style.display = 'none';
       return;
     }
 
-    // 검색어 있으면 목록 표시 후 필터링
     if (pageCardList) pageCardList.style.display = 'flex';
 
     items.forEach(item => {
@@ -146,7 +141,6 @@
       }
     });
 
-    // 검색 결과 없음 메시지
     if (emptyMsg) emptyMsg.style.display = (visibleCount === 0) ? 'block' : 'none';
   }
 </script>

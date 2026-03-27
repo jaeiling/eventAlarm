@@ -72,28 +72,21 @@
     if (events && events.length) {
       cell.classList.add('has-event');
 
-      // 점 표시
       const dot = document.createElement('div');
       dot.className = 'event-dot';
       cell.appendChild(dot);
 
-      // 툴팁 (hover 시만 표시, 클릭 시 모달 오픈)
-      const tooltip = document.createElement('div');
-      tooltip.className = 'cal-tooltip';
-      tooltip.textContent = events.map(e => e.title).join(' / ');
-
-      // 툴팁 클릭 → 해당 행사 카드 스크롤 + 모달 열기
-      tooltip.addEventListener('click', (e) => {
-        e.stopPropagation();
+      // 셀 클릭 → 바로 모달 열기
+      cell.style.cursor = 'pointer';
+      cell.addEventListener('click', () => {
         const firstEvent = events[0];
         const card = document.querySelector(`.event-card[data-id="${firstEvent.id}"]`);
         if (card) {
-          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setTimeout(() => openModal(card), 300);
+          openModal(card);
+        } else {
+          openModalFromData(firstEvent);
         }
       });
-
-      cell.appendChild(tooltip);
     }
 
     return cell;

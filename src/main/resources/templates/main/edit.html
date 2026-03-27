@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>행사 수정 - EventAlarm</title>
+  <title>행사 수정 - 모행</title>
   <link rel="stylesheet" th:href="@{/css/common.css}"/>
 </head>
 <body>
 <div class="page-wrap">
 
   <header class="top-bar">
-    <a th:href="@{'/page/' + ${page.slug} + '?serial=' + ${serial}}" class="back-btn">← 돌아가기</a>
+    <a th:href="@{'/page/' + ${page.slug}}" class="back-btn">← 돌아가기</a>
     <span class="top-bar-title">행사 수정</span>
   </header>
 
@@ -19,61 +19,76 @@
       <div class="form-icon">✏️</div>
       <h1 class="form-title" th:text="${event.title}">행사명</h1>
 
-      <form th:action="@{'/page/' + ${page.slug} + '/events/' + ${event.id} + '/edit?serial=' + ${serial}}"
+      <form th:action="@{'/page/' + ${page.slug} + '/events/' + ${event.id} + '/edit'}"
             th:object="${dto}" method="post" enctype="multipart/form-data" class="form-body">
 
+        <p class="form-required-legend"><span class="required">*</span> 필수 항목</p>
+
+        <!-- 종류 선택 -->
         <div class="form-group">
-          <label class="form-label">행사명 <span class="required">*</span></label>
+          <label class="form-label">종류 <span class="required">*</span></label>
+          <div class="type-toggle">
+            <label class="type-btn">
+              <input type="radio" th:field="*{postType}" value="EVENT" onchange="togglePostType(this.form)"> 행사
+            </label>
+            <label class="type-btn">
+              <input type="radio" th:field="*{postType}" value="NOTICE" onchange="togglePostType(this.form)"> 공지
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">제목 <span class="required">*</span></label>
           <input type="text" th:field="*{title}" class="form-input"
                  th:classappend="${#fields.hasErrors('title')} ? 'input-error' : ''"/>
           <span class="form-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">행사 시작 일시 <span class="required">*</span></label>
-            <input type="datetime-local" th:field="*{eventDateTime}" class="form-input"
-                   th:classappend="${#fields.hasErrors('eventDateTime')} ? 'input-error' : ''"/>
-            <span class="form-error" th:if="${#fields.hasErrors('eventDateTime')}" th:errors="*{eventDateTime}"></span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">행사 종료 일시 <span class="form-hint">(여러 날 행사만)</span></label>
-            <input type="datetime-local" th:field="*{eventEndDateTime}" class="form-input"/>
-          </div>
-        </div>
+        <!-- 행사 전용 필드 (공지 선택 시 숨김) -->
+        <div id="eventOnlyFields">
 
-        <div class="form-row">
+          <div class="form-row form-row-stack">
+            <div class="form-group">
+              <label class="form-label">시작 일시 <span class="required">*</span></label>
+              <input type="datetime-local" th:field="*{eventDateTime}" class="form-input" id="eventDateTimeInput" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">종료 일시 <span class="form-hint">(여러 날 행사만)</span></label>
+              <input type="datetime-local" th:field="*{eventEndDateTime}" class="form-input"/>
+            </div>
+          </div>
+
           <div class="form-group">
             <label class="form-label">장소명 <span class="required">*</span></label>
-            <input type="text" th:field="*{location}" class="form-input"
-                   th:classappend="${#fields.hasErrors('location')} ? 'input-error' : ''"/>
-            <span class="form-error" th:if="${#fields.hasErrors('location')}" th:errors="*{location}"></span>
+            <input type="text" th:field="*{location}" class="form-input"/>
           </div>
+
+          <div class="form-group">
+            <label class="form-label">지도 검색 주소 <span class="form-hint">(카카오맵·네이버지도)</span></label>
+            <input type="text" th:field="*{locationAddress}" class="form-input" placeholder="예: 인천광역시 연수구 아카데미로 119"/>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">회비</label>
+              <input type="text" th:field="*{fee}" class="form-input"
+                     placeholder="예: 20,000" inputmode="numeric" oninput="formatFee(this)"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">입금 계좌</label>
+              <input type="text" th:field="*{bankAccount}" class="form-input"/>
+            </div>
+          </div>
+
         </div>
+        <!-- /행사 전용 필드 -->
 
         <div class="form-group">
-          <label class="form-label">지도 검색 주소 <span class="form-hint">(카카오맵·네이버지도 검색에 사용)</span></label>
-          <input type="text" th:field="*{locationAddress}" class="form-input" placeholder="예: 인천광역시 연수구 아카데미로 119"/>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">행사 내용·설명</label>
+          <label class="form-label">내용·설명</label>
           <textarea th:field="*{description}" class="form-textarea" rows="3"></textarea>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">회비</label>
-            <input type="text" th:field="*{fee}" class="form-input"
-                   placeholder="예: 20,000" inputmode="numeric" oninput="formatFee(this)"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">계좌번호</label>
-            <input type="text" th:field="*{bankAccount}" class="form-input"/>
-          </div>
-        </div>
-
-        <!-- 현재 등록된 이미지 -->
+        <!-- 사진 (행사/공지 공통) -->
         <div class="form-group" th:if="${!#lists.isEmpty(event.images)}">
           <label class="form-label">현재 등록된 사진</label>
           <div class="img-preview-list">
@@ -84,10 +99,8 @@
           </div>
           <p class="form-hint" style="margin-top:6px">새 사진을 업로드하면 기존 사진이 모두 교체됩니다.</p>
         </div>
-
-        <!-- 새 이미지 업로드 -->
         <div class="form-group">
-          <label class="form-label">사진 교체 <span class="form-hint">(최대 5장 · JPG/PNG/GIF/WEBP · 선택)</span></label>
+          <label class="form-label">사진 교체 <span class="form-hint">(최대 10장 · JPG/PNG/GIF/WEBP · 선택)</span></label>
           <div class="img-upload-area" id="uploadArea" onclick="document.getElementById('imgInput').click()">
             <span class="img-upload-icon">📷</span>
             <p class="img-upload-text">클릭하여 사진 선택</p>
@@ -97,13 +110,16 @@
                  style="display:none" onchange="previewImages(this)"/>
           <div class="img-preview-list" id="previewList"></div>
         </div>
-
-        <!-- 대표 이미지 인덱스 (JS로 설정) -->
         <input type="hidden" name="thumbnailIndex" id="thumbnailIndex" value="0"/>
+
+        <div class="form-group">
+          <label class="form-label">링크 <span class="form-hint">(선택 · 외부 URL)</span></label>
+          <input type="url" th:field="*{link}" class="form-input" placeholder="예: https://forms.gle/..."/>
+        </div>
 
         <div class="form-row" style="gap:10px; margin-top:8px">
           <button type="submit" class="btn btn-primary btn-full">수정 완료</button>
-          <a th:href="@{'/page/' + ${page.slug} + '?serial=' + ${serial}}"
+          <a th:href="@{'/page/' + ${page.slug}}"
              class="btn btn-outline btn-full">취소</a>
         </div>
       </form>
@@ -113,5 +129,17 @@
 </div>
 <script th:src="@{/js/imageUpload.js}"></script>
 <script th:src="@{/js/common.js}"></script>
+<script>
+function togglePostType(form) {
+  const isNotice = form.querySelector('input[name="postType"]:checked').value === 'NOTICE';
+  form.querySelector('#eventOnlyFields').style.display = isNotice ? 'none' : '';
+  const dtInput = form.querySelector('#eventDateTimeInput');
+  if (dtInput) dtInput.required = !isNotice;
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('.form-body');
+  if (form) togglePostType(form);
+});
+</script>
 </body>
 </html>

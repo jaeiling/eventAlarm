@@ -6,6 +6,7 @@ import com.example.eventalarm.dto.DepartmentPageCreateDto;
 import com.example.eventalarm.dto.EventCreateDto;
 import com.example.eventalarm.service.DepartmentPageService;
 import com.example.eventalarm.service.EventService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -16,8 +17,10 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriUtils;
 
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -31,6 +34,18 @@ public class PageController {
     public PageController(DepartmentPageService pageService, EventService eventService) {
         this.pageService = pageService;
         this.eventService = eventService;
+    }
+
+    // ── 세션 헬퍼 ────────────────────────────────────────────────
+
+    private static final String SESSION_KEY_PREFIX = "admin:";
+
+    private boolean isAdminSession(HttpSession session, Long pageId) {
+        return Boolean.TRUE.equals(session.getAttribute(SESSION_KEY_PREFIX + pageId));
+    }
+
+    private void setAdminSession(HttpSession session, Long pageId) {
+        session.setAttribute(SESSION_KEY_PREFIX + pageId, true);
     }
 
     // ── 랜딩 페이지 ──────────────────────────────────────────────
@@ -71,13 +86,18 @@ public class PageController {
                              BindingResult bindingResult,
                              RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) return "admin/create";
-        DepartmentPage created = pageService.create(dto);
-        redirectAttributes.addFlashAttribute("serialNumber", created.getSerialNumber());
-        redirectAttributes.addFlashAttribute("pageId", created.getId());
-        redirectAttributes.addFlashAttribute("pageSlug", created.getSlug());
-        redirectAttributes.addFlashAttribute("shareUrl",
-                "https://event-alarm.up.railway.app/page/" + created.getSlug());
-        return "redirect:/admin/created";
+        try {
+            DepartmentPage created = pageService.create(dto);
+            redirectAttributes.addFlashAttribute("serialNumber", created.getSerialNumber());
+            redirectAttributes.addFlashAttribute("pageId", created.getId());
+            redirectAttributes.addFlashAttribute("pageSlug", created.getSlug());
+            redirectAttributes.addFlashAttribute("shareUrl",
+                    "https://event-alarm.up.railway.app/page/" + created.getSlug());
+            return "redirect:/admin/created";
+        } catch (IllegalArgumentException e) {
+            bindingResult.rejectValue("departmentName", "duplicate", e.getMessage());
+            return "admin/create";
+        }
     }
 
     @GetMapping("/admin/created")
@@ -85,7 +105,7 @@ public class PageController {
         return "admin/created";
     }
 
-    // ── 관리자 행사 관리 ─────────────────────────────────────────
+    // ── 관리자 인증 ──────────────────────────────────────────────
 
     @GetMapping("/admin/{pageId}/verify")
     public String verifyForm(@PathVariable Long pageId,
@@ -100,162 +120,183 @@ public class PageController {
     public String verify(@PathVariable Long pageId,
                          @RequestParam String serialNumber,
                          @RequestParam(defaultValue = "admin") String from,
+                         HttpSession session,
                          RedirectAttributes redirectAttributes) {
         if (!pageService.verifySerialNumber(pageId, serialNumber)) {
             redirectAttributes.addFlashAttribute("error", "일련번호가 올바르지 않습니다.");
             return "redirect:/admin/" + pageId + "/verify?from=" + from;
         }
-        // from=page 이면 메인 페이지로, 아니면 관리자 행사 등록 페이지로
+        setAdminSession(session, pageId);
         if ("page".equals(from)) {
             DepartmentPage page = pageService.findById(pageId);
             String slug = page.getSlug() != null ? page.getSlug() : String.valueOf(pageId);
-            return "redirect:/page/" + slug + "?serial=" + serialNumber;
+            return "redirect:/page/" + UriUtils.encodePathSegment(slug, StandardCharsets.UTF_8);
         }
-        return "redirect:/admin/" + pageId + "/events?serial=" + serialNumber;
+        return "redirect:/admin/" + pageId + "/events";
     }
+
+    // ── 관리자 행사 관리 ─────────────────────────────────────────
 
     @GetMapping("/admin/{pageId}/events")
     public String adminEvents(@PathVariable Long pageId,
-                              @RequestParam String serial,
+                              @RequestParam(required = false) String serial,
+                              HttpSession session,
                               Model model) {
-        if (!pageService.verifySerialNumber(pageId, serial)) {
+        if (serial != null && pageService.verifySerialNumber(pageId, serial)) {
+            setAdminSession(session, pageId);
+        }
+        if (!isAdminSession(session, pageId)) {
             return "redirect:/admin/" + pageId + "/verify";
         }
         DepartmentPage page = pageService.findById(pageId);
         List<Event> events = eventService.findByPage(pageId, true, false);
         model.addAttribute("page", page);
         model.addAttribute("events", events);
-        model.addAttribute("serial", serial);
-        model.addAttribute("newEventDto", new EventCreateDto());
         return "admin/events";
+    }
+
+    @GetMapping("/admin/{pageId}/events/new")
+    public String newEventForm(@PathVariable Long pageId,
+                               HttpSession session,
+                               Model model) {
+        if (!isAdminSession(session, pageId)) {
+            return "redirect:/admin/" + pageId + "/verify";
+        }
+        DepartmentPage page = pageService.findById(pageId);
+        model.addAttribute("page", page);
+        model.addAttribute("newEventDto", new EventCreateDto());
+        return "admin/new";
     }
 
     @PostMapping(value = "/admin/{pageId}/events/create", consumes = {"multipart/form-data"})
     public String createEvent(@PathVariable Long pageId,
-                              @RequestParam String serial,
+                              HttpSession session,
                               @Valid @ModelAttribute("newEventDto") EventCreateDto dto,
                               BindingResult bindingResult,
                               Model model,
                               RedirectAttributes redirectAttributes) {
-        if (!pageService.verifySerialNumber(pageId, serial)) {
+        if (!isAdminSession(session, pageId)) {
             return "redirect:/admin/" + pageId + "/verify";
         }
         if (bindingResult.hasErrors()) {
             DepartmentPage page = pageService.findById(pageId);
-            List<Event> events = eventService.findByPage(pageId, true, false);
             model.addAttribute("page", page);
-            model.addAttribute("events", events);
-            model.addAttribute("serial", serial);
-            return "admin/events";
+            return "admin/new";
         }
         eventService.create(pageId, dto);
         redirectAttributes.addFlashAttribute("successMsg", "행사가 등록되었습니다.");
-        return "redirect:/admin/" + pageId + "/events?serial=" + serial;
+        return "redirect:/admin/" + pageId + "/events";
     }
 
     @PostMapping("/admin/{pageId}/events/{eventId}/delete")
     public String deleteEventAdmin(@PathVariable Long pageId,
                                    @PathVariable Long eventId,
-                                   @RequestParam String serial,
+                                   HttpSession session,
                                    RedirectAttributes redirectAttributes) {
-        if (!pageService.verifySerialNumber(pageId, serial)) {
+        if (!isAdminSession(session, pageId)) {
             return "redirect:/admin/" + pageId + "/verify";
         }
         eventService.delete(eventId);
         redirectAttributes.addFlashAttribute("successMsg", "행사가 삭제되었습니다.");
-        return "redirect:/admin/" + pageId + "/events?serial=" + serial;
+        return "redirect:/admin/" + pageId + "/events";
     }
 
-    // ── 메인 페이지 (공개) - slug URL ────────────────────────────
+    // ── 메인 페이지 (공개) ───────────────────────────────────────
 
     @GetMapping("/page/{slug}")
     public String mainPageBySlug(@PathVariable String slug,
                                  @RequestParam(defaultValue = "false") boolean showPast,
                                  @RequestParam(defaultValue = "false") boolean sortDesc,
-                                 @RequestParam(required = false) String serial,
+                                 HttpSession session,
                                  Model model) {
-        // slug가 숫자면 기존 ID 방식으로 처리
-        DepartmentPage page = resolvePageBySlug(slug);
+        DepartmentPage page;
+        try {
+            page = resolvePageBySlug(slug);
+        } catch (IllegalArgumentException e) {
+            return "redirect:/";
+        }
 
         // 숫자 ID로 접근 시 slug URL로 301 리다이렉트
         if (slug.matches("\\d+") && page.getSlug() != null) {
-            String redirectUrl = "/page/" + page.getSlug();
-            if (serial != null) redirectUrl += "?serial=" + serial;
-            return "redirect:" + redirectUrl;
+            return "redirect:/page/" + UriUtils.encodePathSegment(page.getSlug(), StandardCharsets.UTF_8);
         }
 
         List<Event> events = eventService.findByPage(page.getId(), showPast, sortDesc);
-        boolean isAdmin = serial != null && pageService.verifySerialNumber(page.getId(), serial);
+        List<Event> allCalendarEvents = eventService.findAllEventsForCalendar(page.getId());
+        boolean isAdmin = isAdminSession(session, page.getId());
 
         model.addAttribute("page", page);
         model.addAttribute("events", events);
+        model.addAttribute("allCalendarEvents", allCalendarEvents);
         model.addAttribute("showPast", showPast);
         model.addAttribute("sortDesc", sortDesc);
         model.addAttribute("isAdmin", isAdmin);
-        model.addAttribute("serial", serial != null ? serial : "");
         return "main/page";
     }
 
     @GetMapping("/page/{slug}/events/{eventId}/edit")
     public String editEventForm(@PathVariable String slug,
                                 @PathVariable Long eventId,
-                                @RequestParam String serial,
+                                HttpSession session,
                                 Model model) {
         DepartmentPage page = resolvePageBySlug(slug);
-        if (!pageService.verifySerialNumber(page.getId(), serial)) {
-            return "redirect:/page/" + page.getSlug();
+        if (!isAdminSession(session, page.getId())) {
+            return "redirect:/page/" + UriUtils.encodePathSegment(page.getSlug(), StandardCharsets.UTF_8);
         }
         Event event = eventService.findById(eventId);
         EventCreateDto dto = toDto(event);
         model.addAttribute("page", page);
         model.addAttribute("event", event);
         model.addAttribute("dto", dto);
-        model.addAttribute("serial", serial);
         return "main/edit";
     }
 
     @PostMapping(value = "/page/{slug}/events/{eventId}/edit", consumes = {"multipart/form-data"})
     public String editEvent(@PathVariable String slug,
                             @PathVariable Long eventId,
-                            @RequestParam String serial,
+                            HttpSession session,
                             @Valid @ModelAttribute("dto") EventCreateDto dto,
                             BindingResult bindingResult,
                             Model model,
                             RedirectAttributes redirectAttributes) {
         DepartmentPage page = resolvePageBySlug(slug);
-        if (!pageService.verifySerialNumber(page.getId(), serial)) {
-            return "redirect:/page/" + page.getSlug();
+        if (!isAdminSession(session, page.getId())) {
+            return "redirect:/page/" + UriUtils.encodePathSegment(page.getSlug(), StandardCharsets.UTF_8);
         }
         if (bindingResult.hasErrors()) {
             model.addAttribute("page", page);
             model.addAttribute("event", eventService.findById(eventId));
-            model.addAttribute("serial", serial);
             return "main/edit";
         }
         eventService.update(eventId, dto);
         redirectAttributes.addFlashAttribute("successMsg", "행사가 수정되었습니다.");
-        return "redirect:/page/" + page.getSlug() + "?serial=" + serial;
+        return "redirect:/admin/" + page.getId() + "/events";
     }
-
-    // ── 메인 페이지 - 행사 삭제 ──────────────────────────────────
 
     @PostMapping("/page/{slug}/events/{eventId}/delete")
     public String deleteEventMain(@PathVariable String slug,
                                   @PathVariable Long eventId,
-                                  @RequestParam String serial,
+                                  HttpSession session,
                                   RedirectAttributes redirectAttributes) {
         DepartmentPage page = resolvePageBySlug(slug);
-        if (!pageService.verifySerialNumber(page.getId(), serial)) {
-            return "redirect:/page/" + page.getSlug();
+        if (!isAdminSession(session, page.getId())) {
+            return "redirect:/page/" + UriUtils.encodePathSegment(page.getSlug(), StandardCharsets.UTF_8);
         }
         eventService.delete(eventId);
         redirectAttributes.addFlashAttribute("successMsg", "행사가 삭제되었습니다.");
-        return "redirect:/page/" + page.getSlug() + "?serial=" + serial;
+        return "redirect:/page/" + UriUtils.encodePathSegment(page.getSlug(), StandardCharsets.UTF_8);
+    }
+
+    @PostMapping("/page/{slug}/logout")
+    public String logoutPage(@PathVariable String slug, HttpSession session) {
+        DepartmentPage page;
+        try { page = resolvePageBySlug(slug); } catch (IllegalArgumentException e) { return "redirect:/"; }
+        session.removeAttribute(SESSION_KEY_PREFIX + page.getId());
+        return "redirect:/page/" + UriUtils.encodePathSegment(page.getSlug(), StandardCharsets.UTF_8);
     }
 
     // ── private ──────────────────────────────────────────────────
 
-    /** slug(문자) 또는 숫자 ID 모두 처리 */
     private DepartmentPage resolvePageBySlug(String slug) {
         if (slug.matches("\\d+")) {
             return pageService.findById(Long.parseLong(slug));
@@ -267,6 +308,7 @@ public class PageController {
     private EventCreateDto toDto(Event event) {
         EventCreateDto dto = new EventCreateDto();
         dto.setTitle(event.getTitle());
+        dto.setPostType(event.getPostType());
         dto.setEventDateTime(event.getEventDateTime());
         dto.setEventEndDateTime(event.getEventEndDateTime());
         dto.setLocation(event.getLocation());
@@ -274,6 +316,7 @@ public class PageController {
         dto.setDescription(event.getDescription());
         dto.setFee(event.getFee());
         dto.setBankAccount(event.getBankAccount());
+        dto.setLink(event.getLink());
         return dto;
     }
 }

@@ -80,32 +80,62 @@ public class EventService {
                 .orElseThrow(() -> new IllegalArgumentException("행사를 찾을 수 없습니다."));
     }
 
+    /** 달력용 전체 행사 조회 (지난 것 포함, NOTICE 제외) */
+    @Transactional(readOnly = true)
+    public List<Event> findAllEventsForCalendar(Long pageId) {
+        return eventRepository.findEventsByDepartmentPageIdOrderByEventDateTimeAsc(pageId);
+    }
+
     /**
-     * 목록 조회
+     * 목록 조회 — 공지글은 항상 상단 고정, 그 아래에 행사 목록
      */
     @Transactional(readOnly = true)
     public List<Event> findByPage(Long pageId, boolean showPast, boolean sortDesc) {
+        List<Event> notices = eventRepository.findNoticesByDepartmentPageIdOrderByCreatedAtDesc(pageId);
+
+        List<Event> events;
         if (showPast) {
-            return eventRepository.findByDepartmentPageIdOrderByEventDateTimeAsc(pageId);
+            events = eventRepository.findEventsByDepartmentPageIdOrderByEventDateTimeAsc(pageId);
+        } else {
+            LocalDateTime now = LocalDateTime.now();
+            events = sortDesc
+                ? eventRepository.findEventsByDepartmentPageIdAndEventDateTimeAfterOrderByEventDateTimeDesc(pageId, now)
+                : eventRepository.findEventsByDepartmentPageIdAndEventDateTimeAfterOrderByEventDateTimeAsc(pageId, now);
         }
-        LocalDateTime now = LocalDateTime.now();
-        if (sortDesc) {
-            return eventRepository.findByDepartmentPageIdAndEventDateTimeAfterOrderByEventDateTimeDesc(pageId, now);
-        }
-        return eventRepository.findByDepartmentPageIdAndEventDateTimeAfterOrderByEventDateTimeAsc(pageId, now);
+
+        List<Event> result = new java.util.ArrayList<>(notices);
+        result.addAll(events);
+        return result;
     }
 
     // ── private ──────────────────────────────────────────────────
 
     private void setEventFields(Event event, EventCreateDto dto) {
+        String postType = dto.getPostType();
         event.setTitle(dto.getTitle());
-        event.setEventDateTime(dto.getEventDateTime());
-        event.setEventEndDateTime(dto.getEventEndDateTime());
-        event.setLocation(dto.getLocation());
-        event.setLocationAddress(dto.getLocationAddress());
+        event.setPostType(postType);
+
+        // EVENT 타입은 날짜 필수, NOTICE 타입은 날짜 없어도 됨
+        if ("EVENT".equals(postType)) {
+            if (dto.getEventDateTime() == null) {
+                throw new IllegalArgumentException("행사 시작 일시를 입력해주세요.");
+            }
+            event.setEventDateTime(dto.getEventDateTime());
+            event.setEventEndDateTime(dto.getEventEndDateTime());
+            event.setLocation(dto.getLocation());
+            event.setLocationAddress(dto.getLocationAddress());
+        } else {
+            // NOTICE: 날짜/장소 필드 null로 명시
+            event.setEventDateTime(null);
+            event.setEventEndDateTime(null);
+            event.setLocation(null);
+            event.setLocationAddress(null);
+        }
+
         event.setDescription(dto.getDescription());
         event.setFee(dto.getFee());
         event.setBankAccount(dto.getBankAccount());
+        event.setLink(dto.getLink());
     }
 
     private void saveImages(Event event, EventCreateDto dto) {
@@ -114,7 +144,7 @@ public class EventService {
 
         int thumbnailIndex = dto.getThumbnailIndex();
         int order = 0;
-        for (int i = 0; i < Math.min(files.size(), 5); i++) {
+        for (int i = 0; i < Math.min(files.size(), 10); i++) {
             MultipartFile file = files.get(i);
             if (file == null || file.isEmpty()) continue;
 
