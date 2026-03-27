@@ -51,10 +51,21 @@
   function copyShareUrl() {
     const url = document.getElementById('shareUrl').textContent.trim();
     navigator.clipboard.writeText(url).then(() => {
-      const btn = event.target;
-      btn.textContent = '복사됨✓';
-      setTimeout(() => btn.textContent = '복사', 2000);
+      showToast('링크 복사 완료! 🎉');
     });
+  }
+  function showToast(msg) {
+    let toast = document.getElementById('copyToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'copyToast';
+      toast.className = 'copy-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 2000);
   }
 </script>
 </body>
