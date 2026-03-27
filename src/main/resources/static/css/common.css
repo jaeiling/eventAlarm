@@ -152,10 +152,11 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .feature-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
 .feature-card p { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
 
-.how-list { display: flex; flex-direction: column; gap: 16px; }
-.how-list li { display: flex; align-items: flex-start; gap: 14px; font-size: 15px; font-weight: 600; }
-.how-list li strong { font-size: 22px; color: var(--primary); font-weight: 900; min-width: 36px; }
-.how-sub { font-weight: 400; color: var(--text-sub); font-size: 13px; display: block; }
+.how-list { display: flex; flex-direction: column; gap: 16px; max-width: 340px; margin: 0 auto; }
+.how-list li { display: flex; align-items: center; gap: 16px; font-size: 15px; font-weight: 600; }
+.how-list li strong { font-size: 22px; color: var(--primary); font-weight: 900; min-width: 40px; text-align: right; flex-shrink: 0; }
+.how-text { display: flex; flex-direction: column; gap: 2px; }
+.how-sub { font-weight: 400; color: var(--text-sub); font-size: 13px; }
 
 .landing-cta { padding: 0 24px 32px; text-align: center; }
 .landing-footer { text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
