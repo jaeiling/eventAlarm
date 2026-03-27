@@ -4,27 +4,20 @@
 
 // ── D-day 뱃지 렌더링 ──────────────────────────────────────────
 document.querySelectorAll('.dday-badge').forEach(badge => {
-  const datetimeStr = badge.dataset.datetime; // "2025-04-10T18:00:00" 형태
+  const datetimeStr = badge.dataset.datetime;
   if (!datetimeStr) return;
 
   const eventDate = new Date(datetimeStr);
   const now = new Date();
-
-  // 자정 기준 날짜 차이 계산 (시간 무시, 날짜만 비교)
-  // 예: 오늘 오전 11시 / 행사 오후 3시 → 같은 날 → D-Day
   const eventMidnight = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diffDays = Math.round((eventMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
 
   if (diffDays > 0) {
     badge.textContent = `D-${diffDays}`;
-    if (diffDays <= 3) {
-      badge.classList.add('dday-red');    // 3일 이내 → 빨강
-    } else if (diffDays <= 7) {
-      badge.classList.add('dday-yellow'); // 4~7일 → 노랑
-    } else {
-      badge.classList.add('dday-green');  // 8일 이상 → 초록
-    }
+    if (diffDays <= 3)      badge.classList.add('dday-red');
+    else if (diffDays <= 7) badge.classList.add('dday-yellow');
+    else                    badge.classList.add('dday-green');
   } else if (diffDays === 0) {
     badge.textContent = 'D-Day';
     badge.classList.add('dday-today');
@@ -34,74 +27,137 @@ document.querySelectorAll('.dday-badge').forEach(badge => {
   }
 });
 
-// ── 모달 열기/닫기 ──────────────────────────────────────────────
+// ── 캐러셀 빌드 ─────────────────────────────────────────────────
+function buildCarousel(images) {
+  const wrap = document.getElementById('modalCarouselWrap');
+  if (!images || images.length === 0) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  const slides = images.map((url, i) =>
+    `<div class="modal-carousel-slide">
+      <img src="${url.replace(/"/g, '&quot;')}" alt="이미지 ${i + 1}" loading="lazy"/>
+    </div>`
+  ).join('');
+
+  const arrows = images.length > 1 ? `
+    <button class="carousel-arrow carousel-arrow-left" onclick="shiftCarousel(this,-1)">&#8249;</button>
+    <button class="carousel-arrow carousel-arrow-right" onclick="shiftCarousel(this,1)">&#8250;</button>
+  ` : '';
+
+  const dots = images.length > 1
+    ? `<div class="modal-dots">${
+        images.map((_, i) =>
+          `<span class="modal-dot${i === 0 ? ' active' : ''}"></span>`
+        ).join('')
+      }</div>`
+    : '';
+
+  wrap.innerHTML = `<div class="modal-carousel-inner"><div class="modal-carousel" id="modalCarousel">${slides}</div>${arrows}</div>${dots}`;
+  wrap.style.display = 'block';
+
+  if (images.length > 1) {
+    const track = wrap.querySelector('.modal-carousel');
+    const dotEls = wrap.querySelectorAll('.modal-dot');
+    const leftBtn = wrap.querySelector('.carousel-arrow-left');
+    const rightBtn = wrap.querySelector('.carousel-arrow-right');
+
+    const updateArrows = (idx) => {
+      if (leftBtn)  leftBtn.style.opacity  = idx === 0 ? '0.3' : '1';
+      if (rightBtn) rightBtn.style.opacity = idx === images.length - 1 ? '0.3' : '1';
+    };
+
+    track.addEventListener('scroll', () => {
+      const idx = Math.round(track.scrollLeft / track.offsetWidth);
+      dotEls.forEach((d, i) => d.classList.toggle('active', i === idx));
+      updateArrows(idx);
+    }, { passive: true });
+
+    updateArrows(0);
+  }
+}
+
+// ── 모달 열기 ────────────────────────────────────────────────────
 function openModal(cardEl) {
-  const title    = cardEl.dataset.title    || '';
-  const datetime = cardEl.dataset.datetime || '';
-  const location = cardEl.dataset.location || '';
-  const address  = cardEl.dataset.address  || '';
-  const desc     = cardEl.dataset.desc     || '';
-  const fee      = cardEl.dataset.fee      || '';
-  const account  = cardEl.dataset.account  || '';
-
-  document.getElementById('modalTitle').textContent    = title;
-  document.getElementById('modalDatetime').textContent = datetime;
-  document.getElementById('modalLocation').textContent = location;
-
-  // 종료일 표시
+  if (!cardEl) return;
+  const postType    = cardEl.dataset.type      || 'EVENT';
+  const isNotice    = postType === 'NOTICE';
+  const title       = cardEl.dataset.title     || '';
+  const datetime    = cardEl.dataset.datetime  || '';
   const endDatetime = cardEl.dataset.enddatetime || '';
-  const datetimeEl = document.getElementById('modalDatetime');
-  if (endDatetime) {
-    datetimeEl.textContent = datetime + '  ~  ' + endDatetime;
-  } else {
-    datetimeEl.textContent = datetime;
-  }
+  const location    = cardEl.dataset.location  || '';
+  const address     = cardEl.dataset.address   || '';
+  const desc        = cardEl.dataset.desc      || '';
+  const fee         = cardEl.dataset.fee       || '';
+  const account     = cardEl.dataset.account   || '';
+  const link        = cardEl.dataset.link      || '';
+  const imagesRaw   = cardEl.dataset.images    || '';
+  const thumbnail   = cardEl.dataset.thumbnail || '';
 
-  // 대표 이미지
-  const thumbnail = cardEl.dataset.thumbnail || '';
-  const imgWrap = document.getElementById('modalImgWrap');
-  const imgEl   = document.getElementById('modalImg');
-  if (thumbnail) {
-    imgEl.src = thumbnail;
-    imgWrap.style.display = 'block';
-  } else {
-    imgWrap.style.display = 'none';
-  }
+  // 이미지 목록 (|구분자, 없으면 thumbnail 폴백)
+  let images = imagesRaw ? imagesRaw.split('|').filter(Boolean) : [];
+  if (images.length === 0 && thumbnail) images = [thumbnail];
 
-  // 지도 버튼
-  const mapBtns = document.getElementById('mapBtns');
-  mapBtns.innerHTML = '';
-  const searchQuery = encodeURIComponent(address || location);
-  if (searchQuery) {
-    mapBtns.innerHTML = `
-      <a href="https://map.kakao.com/link/search/${searchQuery}" target="_blank" class="map-btn map-btn-kakao">
-        <img src="https://t1.kakaocdn.net/kakaocorp/kakaocorp/admin/asset/corporation/20240424094419.svg" alt="kakao" class="map-btn-icon"> 카카오맵
-      </a>
-      <a href="https://map.naver.com/v5/search/${searchQuery}" target="_blank" class="map-btn map-btn-naver">
-        <img src="https://ssl.pstatic.net/static/maps/mantle/map-icons/favicon-32x32.png" alt="naver" class="map-btn-icon"> 네이버지도
-      </a>
-    `;
+  // 헤더 타입 뱃지
+  const headerType = document.getElementById('modalHeaderType');
+  headerType.textContent = isNotice ? '공지' : '행사';
+  headerType.className = 'modal-header-type ' + (isNotice ? 'type-notice' : 'type-event');
+
+  // 제목
+  document.getElementById('modalTitle').textContent = title;
+
+  // 캐러셀
+  buildCarousel(images);
+
+  // 날짜/장소 — 공지글이면 숨김
+  const datetimeRow = document.getElementById('datetimeRow');
+  const locationRow = document.getElementById('locationRow');
+  if (isNotice) {
+    datetimeRow.style.display = 'none';
+    locationRow.style.display = 'none';
+  } else {
+    datetimeRow.style.display = '';
+    locationRow.style.display = '';
+
+    document.getElementById('modalDatetime').textContent =
+      endDatetime ? datetime + '  ~  ' + endDatetime : datetime;
+
+    document.getElementById('modalLocation').textContent = location;
+
+    const mapBtns = document.getElementById('mapBtns');
+    mapBtns.innerHTML = '';
+    const searchQuery = encodeURIComponent(address || location);
+    if (searchQuery) {
+      mapBtns.innerHTML = `
+        <a href="https://map.kakao.com/link/search/${searchQuery}" target="_blank" class="map-btn map-btn-kakao">
+          <span class="map-btn-logo">K</span> 카카오맵
+        </a>
+        <a href="https://map.naver.com/v5/search/${searchQuery}" target="_blank" class="map-btn map-btn-naver">
+          <span class="map-btn-logo">N</span> 네이버지도
+        </a>
+      `;
+    }
   }
 
   // 설명
   const descRow = document.getElementById('descRow');
   if (desc) {
     document.getElementById('modalDesc').textContent = desc;
-    descRow.style.display = 'flex';
+    descRow.style.display = 'block';
   } else {
     descRow.style.display = 'none';
   }
 
   // 회비 & 계좌
-  const feeRow     = document.getElementById('feeRow');
+  const feeRow      = document.getElementById('feeRow');
   const accountWrap = document.getElementById('accountWrap');
-  if (fee) {
+  if (!isNotice && fee) {
     document.getElementById('modalFee').textContent = fee;
     feeRow.style.display = 'flex';
     if (account) {
       document.getElementById('modalAccount').textContent = account;
       accountWrap.style.display = 'flex';
-      // 복사 버튼에 계좌 저장
       document.getElementById('copyAccountBtn').dataset.account = account;
     } else {
       accountWrap.style.display = 'none';
@@ -110,9 +166,51 @@ function openModal(cardEl) {
     feeRow.style.display = 'none';
   }
 
+  // 링크 버튼
+  const linkEl = document.getElementById('modalLink');
+  if (link) {
+    linkEl.href = link;
+    try {
+      const url = new URL(link);
+      document.getElementById('modalLinkText').textContent =
+        url.hostname.replace('www.', '') + (url.pathname !== '/' ? url.pathname : '');
+    } catch {
+      document.getElementById('modalLinkText').textContent = '링크 바로가기';
+    }
+    linkEl.style.display = 'flex';
+  } else {
+    linkEl.style.display = 'none';
+  }
+
   document.getElementById('modalOverlay').classList.add('open');
   document.getElementById('modalSheet').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  // 뒤로가기로 모달 닫기 (모바일 대응)
+  history.pushState({ modal: true }, '');
+}
+
+/** 달력에서 DOM 카드 없이 데이터 객체로 직접 모달 열기 */
+function openModalFromData(data) {
+  const fake = document.createElement('div');
+  fake.dataset.type        = data.type        || 'EVENT';
+  fake.dataset.title       = data.title       || '';
+  fake.dataset.datetime    = data.datetime    || '';
+  fake.dataset.enddatetime = data.enddatetime || '';
+  fake.dataset.location    = data.location    || '';
+  fake.dataset.address     = data.address     || '';
+  fake.dataset.desc        = data.desc        || '';
+  fake.dataset.fee         = data.fee         || '';
+  fake.dataset.account     = data.account     || '';
+  fake.dataset.link        = data.link        || '';
+  fake.dataset.thumbnail   = data.thumbnail   || '';
+  fake.dataset.images      = data.images      || '';
+  openModal(fake);
+}
+
+function shiftCarousel(btn, dir) {
+  const track = btn.closest('.modal-carousel-inner').querySelector('.modal-carousel');
+  track.scrollBy({ left: dir * track.offsetWidth, behavior: 'smooth' });
 }
 
 function closeModal() {
@@ -135,4 +233,11 @@ function copyAccount() {
 // ESC 키로 모달 닫기
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
+});
+
+// 모바일 뒤로가기로 모달 닫기
+window.addEventListener('popstate', e => {
+  if (document.getElementById('modalSheet').classList.contains('open')) {
+    closeModal();
+  }
 });

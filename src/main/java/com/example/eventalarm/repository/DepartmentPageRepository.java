@@ -11,4 +11,6 @@ public interface DepartmentPageRepository extends JpaRepository<DepartmentPage, 
     java.util.List<DepartmentPage> findAllByOrderByCreatedAtDesc();
     Optional<DepartmentPage> findBySlug(String slug);
     boolean existsBySlug(String slug);
+    boolean existsByUniversityNameAndDepartmentName(String universityName, String departmentName);
+    boolean existsByUniversityNameAndDepartmentNameAndIdNot(String universityName, String departmentName, Long id);
 }

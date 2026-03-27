@@ -1,35 +1,44 @@
 package com.example.eventalarm.service;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class ImageStorageService {
 
-    private final Cloudinary cloudinary;
+    private final S3Client s3Client;
+    private final String bucketName;
+    private final String region;
 
     public ImageStorageService(
-            @Value("${cloudinary.cloud-name}") String cloudName,
-            @Value("${cloudinary.api-key}") String apiKey,
-            @Value("${cloudinary.api-secret}") String apiSecret) {
+            @Value("${aws.s3.bucket-name}") String bucketName,
+            @Value("${aws.s3.region}") String region,
+            @Value("${aws.access-key}") String accessKey,
+            @Value("${aws.secret-key}") String secretKey) {
 
-        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", cloudName,
-                "api_key",    apiKey,
-                "api_secret", apiSecret,
-                "secure",     true
-        ));
+        this.bucketName = bucketName;
+        this.region = region;
+
+        this.s3Client = S3Client.builder()
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(accessKey, secretKey)))
+                .build();
     }
 
     /**
-     * Cloudinary에 이미지 업로드 후 URL 반환
-     * storedFileName 대신 Cloudinary URL을 저장
+     * S3에 이미지 업로드 후 퍼블릭 URL 반환
      */
     public String store(MultipartFile file) {
         if (file == null || file.isEmpty()) return null;
@@ -43,49 +52,57 @@ public class ImageStorageService {
             throw new IllegalArgumentException("허용되지 않는 파일 형식입니다.");
         }
 
+        String key = "eventalarm/" + UUID.randomUUID() + ext;
+        String contentType = resolveContentType(ext);
+
         try {
-            Map result = cloudinary.uploader().upload(file.getBytes(),
-                    ObjectUtils.asMap(
-                            "folder", "eventalarm",
-                            "resource_type", "image"
-                    ));
-            return (String) result.get("secure_url");
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(key)
+                            .contentType(contentType)
+                            .build(),
+                    RequestBody.fromBytes(file.getBytes())
+            );
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드에 실패했습니다.", e);
         }
+
+        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
     }
 
     /**
-     * Cloudinary 이미지 삭제
-     * URL에서 public_id 추출 후 삭제
+     * S3 이미지 삭제 (URL에서 key 추출)
      */
-    public void delete(String storedUrl) {
-        if (storedUrl == null || storedUrl.isEmpty()) return;
+    public void delete(String url) {
+        if (url == null || url.isEmpty()) return;
+        String key = extractKey(url);
+        if (key == null) return;
         try {
-            // URL에서 public_id 추출: .../eventalarm/filename.jpg → eventalarm/filename
-            String publicId = extractPublicId(storedUrl);
-            if (publicId != null) {
-                cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
-            }
-        } catch (IOException ignored) {}
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build());
+        } catch (Exception ignored) {}
     }
 
-    private String extractPublicId(String url) {
-        try {
-            // https://res.cloudinary.com/{cloud}/image/upload/v123/{folder}/{name}.{ext}
-            int uploadIdx = url.indexOf("/upload/");
-            if (uploadIdx == -1) return null;
-            String afterUpload = url.substring(uploadIdx + 8);
-            // v123/ 버전 prefix 제거
-            if (afterUpload.matches("v\\d+/.*")) {
-                afterUpload = afterUpload.replaceFirst("v\\d+/", "");
-            }
-            // 확장자 제거
-            int dotIdx = afterUpload.lastIndexOf('.');
-            if (dotIdx != -1) afterUpload = afterUpload.substring(0, dotIdx);
-            return afterUpload;
-        } catch (Exception e) {
-            return null;
-        }
+    // ── private ──────────────────────────────────────────────────
+
+    private String extractKey(String url) {
+        // https://{bucket}.s3.{region}.amazonaws.com/{key}
+        String prefix = "amazonaws.com/";
+        int idx = url.indexOf(prefix);
+        if (idx == -1) return null;
+        return url.substring(idx + prefix.length());
+    }
+
+    private String resolveContentType(String ext) {
+        return switch (ext) {
+            case ".jpg", ".jpeg" -> "image/jpeg";
+            case ".png"          -> "image/png";
+            case ".gif"          -> "image/gif";
+            case ".webp"         -> "image/webp";
+            default              -> "application/octet-stream";
+        };
     }
 }

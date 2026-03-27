@@ -10,20 +10,28 @@ import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-    // 해당 학과 페이지의 모든 행사 + 이미지 한 번에 (N+1 방지)
-    @Query("SELECT DISTINCT e FROM Event e LEFT JOIN FETCH e.images " +
-           "WHERE e.departmentPage.id = :pageId ORDER BY e.eventDateTime ASC")
-    List<Event> findByDepartmentPageIdOrderByEventDateTimeAsc(@Param("pageId") Long pageId);
+    // ── 공지글 ────────────────────────────────────────────────────
 
-    // 미래 행사만 + 이미지 한 번에, 날짜 오름차순
     @Query("SELECT DISTINCT e FROM Event e LEFT JOIN FETCH e.images " +
-           "WHERE e.departmentPage.id = :pageId AND e.eventDateTime > :now ORDER BY e.eventDateTime ASC")
-    List<Event> findByDepartmentPageIdAndEventDateTimeAfterOrderByEventDateTimeAsc(
+           "WHERE e.departmentPage.id = :pageId AND e.postType = 'NOTICE' ORDER BY e.createdAt DESC")
+    List<Event> findNoticesByDepartmentPageIdOrderByCreatedAtDesc(@Param("pageId") Long pageId);
+
+    // ── 행사 (postType = 'EVENT' 또는 null인 기존 데이터 포함) ──
+
+    @Query("SELECT DISTINCT e FROM Event e LEFT JOIN FETCH e.images " +
+           "WHERE e.departmentPage.id = :pageId AND (e.postType = 'EVENT' OR e.postType IS NULL) " +
+           "ORDER BY e.eventDateTime ASC")
+    List<Event> findEventsByDepartmentPageIdOrderByEventDateTimeAsc(@Param("pageId") Long pageId);
+
+    @Query("SELECT DISTINCT e FROM Event e LEFT JOIN FETCH e.images " +
+           "WHERE e.departmentPage.id = :pageId AND (e.postType = 'EVENT' OR e.postType IS NULL) " +
+           "AND e.eventDateTime > :now ORDER BY e.eventDateTime ASC")
+    List<Event> findEventsByDepartmentPageIdAndEventDateTimeAfterOrderByEventDateTimeAsc(
             @Param("pageId") Long pageId, @Param("now") LocalDateTime now);
 
-    // 미래 행사만 + 이미지 한 번에, 날짜 내림차순
     @Query("SELECT DISTINCT e FROM Event e LEFT JOIN FETCH e.images " +
-           "WHERE e.departmentPage.id = :pageId AND e.eventDateTime > :now ORDER BY e.eventDateTime DESC")
-    List<Event> findByDepartmentPageIdAndEventDateTimeAfterOrderByEventDateTimeDesc(
+           "WHERE e.departmentPage.id = :pageId AND (e.postType = 'EVENT' OR e.postType IS NULL) " +
+           "AND e.eventDateTime > :now ORDER BY e.eventDateTime DESC")
+    List<Event> findEventsByDepartmentPageIdAndEventDateTimeAfterOrderByEventDateTimeDesc(
             @Param("pageId") Long pageId, @Param("now") LocalDateTime now);
 }

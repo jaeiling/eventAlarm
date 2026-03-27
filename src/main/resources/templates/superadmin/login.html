@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>슈퍼 관리자 - 모행</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}"/>
+</head>
+<body>
+<div class="page-wrap" style="display:flex; align-items:center; justify-content:center; min-height:100vh;">
+  <div class="form-card" style="max-width:360px; width:100%;">
+    <div class="form-icon">🔐</div>
+    <h1 class="form-title">슈퍼 관리자</h1>
+
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <form action="/superadmin/login" method="post" class="form-body">
+      <div class="form-group">
+        <label class="form-label">비밀번호</label>
+        <input type="password" name="password" class="form-input" autofocus placeholder="비밀번호 입력"/>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px">로그인</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

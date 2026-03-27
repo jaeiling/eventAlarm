@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title th:text="${page.universityName + ' ' + page.departmentName + ' - EventAlarm'}">EventAlarm</title>
+  <title th:text="${page.universityName + ' ' + page.departmentName + ' - 모행'}">모행</title>
   <link rel="stylesheet" th:href="@{/css/common.css}"/>
 </head>
 <body>
@@ -11,15 +11,24 @@
 
   <!-- 상단 헤더 -->
   <header class="main-header">
-    <a th:href="@{/}" class="back-btn">← 홈</a>
     <div class="main-header-info">
       <a th:href="@{'/page/' + ${page.slug}}" style="text-decoration:none; color:inherit; display:block; text-align:center;">
         <p class="main-univ" th:text="${page.universityName}">대학교명</p>
         <h1 class="main-dept" th:text="${page.departmentName}">학과명</h1>
       </a>
     </div>
-    <a th:href="@{'/admin/' + ${page.id} + '/verify'}" class="top-bar-link">관리 🔐</a>
+    <a th:unless="${isAdmin}" th:href="@{'/admin/' + ${page.id} + '/verify'}" class="top-bar-link">관리 🔐</a>
+    <a th:if="${isAdmin}" th:href="@{'/admin/' + ${page.id} + '/events'}" class="top-bar-link">관리 패널 →</a>
   </header>
+
+  <!-- 학과 소개 -->
+  <div th:if="${page.description != null and !#strings.isEmpty(page.description)}" class="dept-desc-wrap">
+    <p class="dept-desc" th:text="${page.description}"></p>
+  </div>
+
+  <!-- 플래시 메시지 (등록/수정 후) -->
+  <div th:if="${successMsg}" class="alert alert-success" style="margin: 10px 18px 0;"
+       th:text="${successMsg}"></div>
 
   <main class="main-wrap">
 
@@ -59,44 +68,64 @@
         <li class="event-card"
             th:each="event : ${events}"
             th:data-id="${event.id}"
+            th:data-type="${event.postType}"
             th:data-title="${event.title}"
-            th:data-datetime="${#temporals.format(event.eventDateTime, 'yyyy.MM.dd HH:mm')}"
+            th:data-datetime="${event.eventDateTime != null ? #temporals.format(event.eventDateTime, 'yyyy.MM.dd HH:mm') : ''}"
             th:data-enddatetime="${event.eventEndDateTime != null ? #temporals.format(event.eventEndDateTime, 'yyyy.MM.dd HH:mm') : ''}"
-            th:data-location="${event.location}"
-            th:data-address="${event.locationAddress}"
-            th:data-desc="${event.description}"
-            th:data-fee="${event.fee}"
-            th:data-account="${event.bankAccount}"
+            th:data-location="${event.location != null ? event.location : ''}"
+            th:data-address="${event.locationAddress != null ? event.locationAddress : ''}"
+            th:data-desc="${event.description != null ? event.description : ''}"
+            th:data-fee="${event.fee != null ? event.fee : ''}"
+            th:data-account="${event.bankAccount != null ? event.bankAccount : ''}"
+            th:data-link="${event.link != null ? event.link : ''}"
             th:data-thumbnail="${event.thumbnailImage != null ? event.thumbnailImage.storedFileName : ''}"
-            onclick="openModal(this)">
+            th:data-images="${event.imageUrlsCsv}">
 
-          <!-- D-day 뱃지 -->
-          <div class="event-card-left">
-            <span class="dday-badge" th:data-datetime="${event.eventDateTime}"></span>
+          <!-- 카드 상단 row -->
+          <div class="event-card-top">
+            <div class="event-card-left">
+              <span th:if="${!event.isNotice()}"
+                    class="dday-badge" th:data-datetime="${event.eventDateTime}"></span>
+              <span th:if="${event.isNotice()}" class="notice-badge">공지</span>
+            </div>
+
+            <div class="event-card-body">
+              <p class="event-card-title" th:text="${event.title}">제목</p>
+              <p class="event-card-meta">
+                <th:block th:if="${!event.isNotice() and event.eventDateTime != null}">
+                  <span th:if="${event.eventEndDateTime == null}"
+                        th:text="${#temporals.format(event.eventDateTime, 'MM.dd (E) HH:mm')}"></span>
+                  <span th:if="${event.eventEndDateTime != null}"
+                        th:text="${#temporals.format(event.eventDateTime, 'MM.dd(E)')} + ' ~ ' + ${#temporals.format(event.eventEndDateTime, 'MM.dd(E)')}"></span>
+                  <span th:if="${event.location != null}"> · <th:block th:text="${event.location}"/></span>
+                </th:block>
+                <span th:if="${event.isNotice()}" class="notice-meta-label">공지사항</span>
+              </p>
+              <p class="event-card-desc"
+                 th:if="${event.description != null and !#strings.isEmpty(event.description)}"
+                 th:text="${event.description}"></p>
+            </div>
+
+            <!-- 관리자 수정/삭제 버튼 -->
+            <div class="event-card-admin" th:if="${isAdmin}" onclick="event.stopPropagation()">
+              <a th:href="@{'/page/' + ${page.slug} + '/events/' + ${event.id} + '/edit'}"
+                 class="btn-admin-edit">수정</a>
+              <form th:action="@{'/page/' + ${page.slug} + '/events/' + ${event.id} + '/delete'}"
+                    method="post" onsubmit="return confirm('정말 삭제하시겠어요?')">
+                <button type="submit" class="btn-admin-delete">삭제</button>
+              </form>
+            </div>
+            <span class="event-card-arrow" th:unless="${isAdmin}">›</span>
           </div>
 
-          <div class="event-card-body">
-            <p class="event-card-title" th:text="${event.title}">행사명</p>
-            <p class="event-card-meta">
-              <span th:if="${event.eventEndDateTime == null}"
-                    th:text="${#temporals.format(event.eventDateTime, 'MM.dd (E) HH:mm')}"></span>
-              <span th:if="${event.eventEndDateTime != null}"
-                    th:text="${#temporals.format(event.eventDateTime, 'MM.dd(E)')} + ' ~ ' + ${#temporals.format(event.eventEndDateTime, 'MM.dd(E)')}"></span>
-              · <span th:text="${event.location}"></span>
-            </p>
+          <!-- 하단 배너 (B안: 와이드 대표 이미지 + 사진수 뱃지) -->
+          <div class="event-card-banner" th:if="${!event.images.isEmpty()}">
+            <img th:src="${event.thumbnailImage != null ? event.thumbnailImage.storedFileName : event.images[0].storedFileName}"
+                 alt="이미지" class="event-card-banner-img"/>
+            <span class="event-card-img-count"
+                  th:if="${event.images.size() > 1}"
+                  th:text="'📷 ' + ${event.images.size()}"></span>
           </div>
-
-          <!-- 관리자 수정/삭제 버튼 (인증된 경우만 표시) -->
-          <div class="event-card-admin" th:if="${isAdmin}" onclick="event.stopPropagation()">
-            <a th:href="@{'/page/' + ${page.slug} + '/events/' + ${event.id} + '/edit?serial=' + ${serial}}"
-               class="btn-admin-edit">수정</a>
-            <form th:action="@{'/page/' + ${page.slug} + '/events/' + ${event.id} + '/delete?serial=' + ${serial}}"
-                  method="post" onsubmit="return confirm('정말 삭제하시겠어요?')">
-              <button type="submit" class="btn-admin-delete">삭제</button>
-            </form>
-          </div>
-
-          <span class="event-card-arrow" th:unless="${isAdmin}">›</span>
         </li>
       </ul>
     </section>
@@ -106,74 +135,115 @@
   <!-- ④ 행사 상세 모달 -->
   <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
   <div class="modal-sheet" id="modalSheet">
-    <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal()">✕</button>
 
-    <div class="modal-body">
-      <h2 class="modal-title" id="modalTitle"></h2>
+    <!-- 상단 헤더 (고정) -->
+    <div class="modal-header">
+      <span class="modal-header-type" id="modalHeaderType"></span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
 
-      <!-- 대표 이미지 -->
-      <div class="modal-img-wrap" id="modalImgWrap" style="display:none">
-        <img id="modalImg" src="" alt="행사 이미지" class="modal-img"/>
-      </div>
+    <!-- 스크롤 영역 -->
+    <div class="modal-scroll">
+      <!-- 이미지 캐러셀 -->
+      <div class="modal-carousel-wrap" id="modalCarouselWrap" style="display:none"></div>
 
-      <div class="modal-row">
-        <span class="modal-icon">📅</span>
-        <span class="modal-text" id="modalDatetime"></span>
-      </div>
+      <div class="modal-body">
+        <h2 class="modal-title" id="modalTitle"></h2>
 
-      <div class="modal-row">
-        <span class="modal-icon">📍</span>
-        <div>
-          <p class="modal-text" id="modalLocation"></p>
-          <div class="map-btns" id="mapBtns"></div>
-        </div>
-      </div>
+        <!-- 정보 카드 -->
+        <div class="modal-info-card">
+          <div class="modal-row" id="datetimeRow">
+            <span class="modal-icon">📅</span>
+            <span class="modal-text" id="modalDatetime"></span>
+          </div>
 
-      <div class="modal-row" id="descRow" style="display:none">
-        <span class="modal-icon">📝</span>
-        <p class="modal-text modal-desc" id="modalDesc"></p>
-      </div>
+          <div class="modal-row" id="locationRow">
+            <span class="modal-icon">📍</span>
+            <div style="flex:1; min-width:0;">
+              <p class="modal-text" id="modalLocation"></p>
+              <div class="map-btns" id="mapBtns"></div>
+            </div>
+          </div>
 
-      <div class="modal-row" id="feeRow" style="display:none">
-        <span class="modal-icon">💸</span>
-        <div>
-          <p class="modal-text" id="modalFee"></p>
-          <div class="account-wrap" id="accountWrap" style="display:none">
-            <span class="modal-text account-text" id="modalAccount"></span>
-            <button class="copy-btn-sm" id="copyAccountBtn" onclick="copyAccount()">복사</button>
+          <div class="modal-row" id="feeRow" style="display:none">
+            <span class="modal-icon">💸</span>
+            <div style="flex:1; min-width:0;">
+              <p class="modal-text" id="modalFee"></p>
+              <div class="account-wrap" id="accountWrap" style="display:none">
+                <span class="modal-text account-text" id="modalAccount"></span>
+                <button class="copy-btn-sm" id="copyAccountBtn" onclick="copyAccount()">복사</button>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- 설명 카드 -->
+        <div class="modal-desc-card" id="descRow" style="display:none">
+          <p class="modal-desc-text" id="modalDesc"></p>
+        </div>
+
+        <!-- 링크 버튼 -->
+        <a class="modal-link-btn" id="modalLink" href="#" target="_blank" rel="noopener" style="display:none">
+          🔗 <span id="modalLinkText">링크 바로가기</span>
+        </a>
       </div>
     </div>
   </div>
 
   <!-- 관리자 인증 플로팅 버튼 (미인증 상태) -->
   <div th:unless="${isAdmin}" class="admin-float-wrap">
-    <a th:href="@{'/admin/' + ${page.id} + '/verify?from=page'}" class="admin-float-btn">🔐 관리</a>
+    <a th:href="@{'/admin/' + ${page.id} + '/verify'}" class="admin-float-btn">🔐 관리</a>
   </div>
   <!-- 관리자 인증 완료 배너 -->
   <div th:if="${isAdmin}" class="admin-banner">
-    ✅ 관리자 모드 · 수정/삭제가 가능합니다
+    <span>✅ 관리자 모드 ·
+      <a th:href="@{'/admin/' + ${page.id} + '/events'}"
+         style="color:#fff; text-decoration:underline; margin-left:4px;">행사 등록/관리 →</a>
+    </span>
+    <form th:action="@{'/page/' + ${page.slug} + '/logout'}" method="post" style="margin:0;">
+      <button type="submit" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:#fff; border-radius:6px; padding:4px 12px; font-size:12px; cursor:pointer;">로그아웃</button>
+    </form>
   </div>
 
 </div>
 
-<!-- 행사 데이터를 JS로 전달 (달력용) -->
+<!-- 행사 데이터를 JS로 전달 (달력용 — 지난 것 포함 전체) -->
 <script th:inline="javascript">
   /*<![CDATA[*/
   const eventDataList = [];
-  /*[# th:each="e : ${events}"]*/
+  /*[# th:each="e : ${allCalendarEvents}"]*/
   eventDataList.push({
-    id:       /*[[${e.id}]]*/ 0,
-    title:    /*[[${e.title}]]*/ '',
-    datetime: /*[[${#temporals.format(e.eventDateTime, 'yyyy-MM-dd HH:mm')}]]*/ ''
+    id:          /*[[${e.id}]]*/ 0,
+    title:       /*[[${e.title}]]*/ '',
+    datetime:    /*[[${#temporals.format(e.eventDateTime, 'yyyy-MM-dd HH:mm')}]]*/ '',
+    enddatetime: /*[[${e.eventEndDateTime != null ? #temporals.format(e.eventEndDateTime, 'yyyy-MM-dd HH:mm') : ''}]]*/ '',
+    location:    /*[[${e.location != null ? e.location : ''}]]*/ '',
+    address:     /*[[${e.locationAddress != null ? e.locationAddress : ''}]]*/ '',
+    desc:        /*[[${e.description != null ? e.description : ''}]]*/ '',
+    fee:         /*[[${e.fee != null ? e.fee : ''}]]*/ '',
+    account:     /*[[${e.bankAccount != null ? e.bankAccount : ''}]]*/ '',
+    link:        /*[[${e.link != null ? e.link : ''}]]*/ '',
+    thumbnail:   /*[[${e.thumbnailImage != null ? e.thumbnailImage.storedFileName : ''}]]*/ '',
+    images:      /*[[${e.imageUrlsCsv}]]*/ '',
+    type:        /*[[${e.postType}]]*/ 'EVENT'
   });
   /*[/]*/
   /*]]>*/
 </script>
-<script th:src="@{/js/calendar.js}"></script>
 <script th:src="@{/js/modal.js}"></script>
+<script th:src="@{/js/calendar.js}"></script>
 <script th:src="@{/js/common.js}"></script>
+<script>
+  // 이벤트 카드 클릭 → 모달 열기 (이벤트 위임)
+  document.addEventListener('click', function(e) {
+    var adminBtn = e.target.closest('.event-card-admin');
+    if (adminBtn) return; // 관리자 버튼 클릭은 무시
+    var card = e.target.closest('.event-card');
+    if (card) {
+      e.preventDefault();
+      openModal(card);
+    }
+  });
+</script>
 </body>
 </html>

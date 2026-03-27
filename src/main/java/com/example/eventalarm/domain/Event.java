@@ -23,14 +23,20 @@ public class Event {
     @Column(nullable = false)
     private String title;           // 행사명
 
-    @Column(nullable = false)
-    private LocalDateTime eventDateTime;  // 행사 시작 일시
+    @Column(length = 10)
+    private String postType = "EVENT"; // 게시물 타입: EVENT(행사) / NOTICE(공지)
+
+    @Column
+    private LocalDateTime eventDateTime;  // 행사 시작 일시 (공지글이면 null)
 
     @Column
     private LocalDateTime eventEndDateTime; // 행사 종료 일시 (선택, null이면 당일)
 
-    @Column(nullable = false)
-    private String location;        // 장소명 (예: 인천대 7호관)
+    @Column
+    private String location;        // 장소명 (공지글이면 null)
+
+    @Column
+    private String link;            // 외부 링크 (선택)
 
     @Column
     private String locationAddress; // 검색용 주소 (지도 링크에 사용)
@@ -74,6 +80,11 @@ public class Event {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
+    public String getPostType() { return postType != null ? postType : "EVENT"; }
+    public void setPostType(String postType) { this.postType = postType; }
+
+    public boolean isNotice() { return "NOTICE".equals(getPostType()); }
+
     public LocalDateTime getEventDateTime() { return eventDateTime; }
     public void setEventDateTime(LocalDateTime eventDateTime) { this.eventDateTime = eventDateTime; }
 
@@ -95,6 +106,9 @@ public class Event {
     public String getBankAccount() { return bankAccount; }
     public void setBankAccount(String bankAccount) { this.bankAccount = bankAccount; }
 
+    public String getLink() { return link; }
+    public void setLink(String link) { this.link = link; }
+
     public List<EventImage> getImages() { return images; }
     public void setImages(List<EventImage> images) { this.images = images; }
 
@@ -106,4 +120,11 @@ public class Event {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    /** 이미지 URL들을 | 구분자로 연결한 문자열 반환 (Thymeleaf 뷰용) */
+    public String getImageUrlsCsv() {
+        return images.stream()
+                .map(EventImage::getStoredFileName)
+                .collect(java.util.stream.Collectors.joining("|"));
+    }
 }

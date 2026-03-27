@@ -2,6 +2,8 @@ package com.example.eventalarm.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 학과 페이지 엔티티
@@ -28,6 +30,12 @@ public class DepartmentPage {
     @Column(unique = true)
     private String slug; // URL 슬러그: 인천대학교-정보통신공학과
 
+    @Column(columnDefinition = "TEXT")
+    private String description; // 학과 소개 (선택)
+
+    @OneToMany(mappedBy = "departmentPage", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Event> events = new ArrayList<>();
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -51,6 +59,9 @@ public class DepartmentPage {
 
     public String getSlug() { return slug; }
     public void setSlug(String slug) { this.slug = slug; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
 }
