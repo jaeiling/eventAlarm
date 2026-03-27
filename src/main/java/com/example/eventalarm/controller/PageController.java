@@ -92,7 +92,7 @@ public class PageController {
             redirectAttributes.addFlashAttribute("pageId", created.getId());
             redirectAttributes.addFlashAttribute("pageSlug", created.getSlug());
             redirectAttributes.addFlashAttribute("shareUrl",
-                    "https://event-alarm.up.railway.app/page/" + created.getSlug());
+                    "https://mo-haeng.up.railway.app/page/" + created.getSlug());
             return "redirect:/admin/created";
         } catch (IllegalArgumentException e) {
             bindingResult.rejectValue("departmentName", "duplicate", e.getMessage());
