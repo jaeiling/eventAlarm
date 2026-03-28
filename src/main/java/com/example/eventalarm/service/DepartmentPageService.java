@@ -29,7 +29,13 @@ public class DepartmentPageService {
         DepartmentPage page = new DepartmentPage();
         page.setUniversityName(dto.getUniversityName());
         page.setDepartmentName(dto.getDepartmentName());
-        page.setDescription(dto.getDescription());
+
+        // 소개 미입력 시 자동 생성
+        String description = dto.getDescription();
+        if (description == null || description.isBlank()) {
+            description = dto.getUniversityName() + " " + dto.getDepartmentName() + "입니다. 최신 행사 소식을 여기서 확인하세요.";
+        }
+        page.setDescription(description);
         page.setSerialNumber(generateUniqueSerialNumber());
         page.setSlug(generateUniqueSlug(dto.getUniversityName(), dto.getDepartmentName()));
         return repository.save(page);
