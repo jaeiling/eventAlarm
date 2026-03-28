@@ -171,9 +171,11 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .page-search-input { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 15px; outline: none; background: var(--bg); color: var(--text); transition: border 0.15s; }
 .page-search-input:focus { border-color: var(--primary); background: var(--white); }
 
-.page-card-list { display: flex; flex-direction: column; gap: 10px; max-height: 340px; overflow-y: auto; padding-right: 2px; }
-.page-card-list::-webkit-scrollbar { width: 4px; }
-.page-card-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.page-card-list { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: scroll; padding-right: 8px; }
+.page-card-list::-webkit-scrollbar { width: 6px; }
+.page-card-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+.page-card-list::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 4px; }
+.page-card-item { flex-shrink: 0; }
 
 .page-card-item { border-radius: var(--radius); overflow: hidden; }
 .page-card-link { display: block; }
