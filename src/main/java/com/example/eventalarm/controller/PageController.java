@@ -56,8 +56,11 @@ public class PageController {
     // ── 랜딩 페이지 ──────────────────────────────────────────────
 
     @GetMapping("/")
-    public String landing(Model model) {
+    public String landing(Model model, HttpServletRequest request) {
         model.addAttribute("pages", pageService.findAll());
+        try {
+            statsService.record(null, "랜딩", "메인", request);
+        } catch (Exception ignored) {}
         return "landing";
     }
 

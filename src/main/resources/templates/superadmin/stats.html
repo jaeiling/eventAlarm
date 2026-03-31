@@ -147,7 +147,7 @@
          th:with="maxVal=${#lists.isEmpty(stats.dailyVisitors) ? 1 : stats.dailyVisitors[0].visitors}">
       <div class="daily-chart" id="dailyChart">
         <div class="daily-bar-wrap" th:each="d : ${stats.dailyVisitors}"
-             th:with="maxV=${stats.dailyVisitors.stream().mapToLong(x -> x.visitors).max().orElse(1)}">
+             th:with="maxV=${stats.maxDailyVisitors}">
           <div class="daily-count" th:text="${d.visitors}">0</div>
           <div class="daily-bar"
                th:style="'height:' + (${d.visitors} * 80 / (${maxV} > 0 ? ${maxV} : 1)) + 'px'"></div>

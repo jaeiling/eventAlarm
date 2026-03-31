@@ -71,13 +71,17 @@ public class StatsService {
 
         // ── 일별 방문자 추이 (최근 7일) ────────────────────────
         List<Map<String, Object>> dailyVisitors = new ArrayList<>();
+        long maxDailyVisitors = 1L;
         for (Object[] row : pageViewRepository.findDailyVisitors(sevenDaysAgo)) {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("date",     row[0].toString());
             item.put("visitors", row[1]);
             dailyVisitors.add(item);
+            long v = ((Number) row[1]).longValue();
+            if (v > maxDailyVisitors) maxDailyVisitors = v;
         }
         stats.put("dailyVisitors", dailyVisitors);
+        stats.put("maxDailyVisitors", maxDailyVisitors);
 
         return stats;
     }
