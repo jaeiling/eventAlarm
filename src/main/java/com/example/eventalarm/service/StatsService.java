@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -82,6 +84,21 @@ public class StatsService {
         }
         stats.put("dailyVisitors", dailyVisitors);
         stats.put("maxDailyVisitors", maxDailyVisitors);
+
+        // ── 최근 방문 로그 (최대 50개) ──────────────────────────
+        List<Map<String, Object>> recentLogs = new ArrayList<>();
+        ZoneId kst = ZoneId.of("Asia/Seoul");
+        ZoneId utc = ZoneId.of("UTC");
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MM.dd HH:mm:ss");
+        for (PageView v : pageViewRepository.findTop50ByOrderByViewedAtDesc()) {
+            Map<String, Object> log = new LinkedHashMap<>();
+            log.put("time", v.getViewedAt().atZone(utc).withZoneSameInstant(kst).format(fmt));
+            log.put("page", v.getUniversityName() + " " + v.getDepartmentName());
+            log.put("device", v.getDeviceType());
+            log.put("ip", v.getVisitorIp());
+            recentLogs.add(log);
+        }
+        stats.put("recentLogs", recentLogs);
 
         return stats;
     }

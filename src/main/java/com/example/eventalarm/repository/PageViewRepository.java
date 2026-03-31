@@ -40,4 +40,7 @@ public interface PageViewRepository extends JpaRepository<PageView, Long> {
            "FROM PageView v WHERE v.viewedAt >= :since " +
            "GROUP BY CAST(v.viewedAt AS date) ORDER BY CAST(v.viewedAt AS date)")
     List<Object[]> findDailyVisitors(@Param("since") LocalDateTime since);
+
+    /** 최근 방문 기록 50개 (시간 역순) */
+    List<PageView> findTop50ByOrderByViewedAtDesc();
 }
