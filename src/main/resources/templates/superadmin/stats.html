@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>통계 대시보드 - 모행</title>
+  <link rel="icon" type="image/png" th:href="@{/favicon.png}"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Pretendard', -apple-system, sans-serif; background: #f4f6fb; color: #1a1a2e; font-size: 15px; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
+    .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .top-bar h1 { font-size: 22px; font-weight: 900; }
+    .top-bar a { font-size: 13px; color: #5B6EF5; font-weight: 600; text-decoration: none; }
+    .auto-refresh { font-size: 12px; color: #999; margin-top: 4px; }
+
+    /* 숫자 카드 그리드 */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: #fff; border-radius: 14px; padding: 20px 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    .stat-card .label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 8px; }
+    .stat-card .value { font-size: 32px; font-weight: 900; color: #5B6EF5; }
+    .stat-card.realtime .value { color: #e53935; }
+    .stat-card.today .value { color: #16a34a; }
+
+    /* 섹션 */
+    .section { background: #fff; border-radius: 14px; padding: 22px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 20px; }
+    .section h2 { font-size: 15px; font-weight: 800; margin-bottom: 16px; color: #1a1a2e; }
+
+    /* 학과별 조회수 */
+    .page-rank-list { display: flex; flex-direction: column; gap: 10px; }
+    .page-rank-item { display: flex; align-items: center; gap: 12px; }
+    .rank-num { font-size: 13px; font-weight: 900; color: #bbb; min-width: 24px; text-align: center; }
+    .rank-num.top { color: #5B6EF5; }
+    .rank-bar-wrap { flex: 1; }
+    .rank-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .rank-bar-bg { background: #f0f0f8; border-radius: 6px; height: 8px; overflow: hidden; }
+    .rank-bar { background: #5B6EF5; height: 8px; border-radius: 6px; transition: width 0.6s ease; }
+    .rank-count { font-size: 13px; font-weight: 700; color: #5B6EF5; min-width: 40px; text-align: right; }
+
+    /* 기기 비율 */
+    .device-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .device-card { background: #f7f8fc; border-radius: 10px; padding: 16px; text-align: center; }
+    .device-icon { font-size: 28px; margin-bottom: 6px; }
+    .device-label { font-size: 12px; color: #888; font-weight: 600; }
+    .device-value { font-size: 22px; font-weight: 900; color: #1a1a2e; }
+    .device-pct { font-size: 12px; color: #5B6EF5; font-weight: 700; margin-top: 2px; }
+
+    /* 일별 추이 */
+    .daily-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding-top: 10px; }
+    .daily-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+    .daily-bar { background: #5B6EF5; border-radius: 4px 4px 0 0; width: 100%; min-height: 4px; transition: height 0.5s ease; }
+    .daily-label { font-size: 10px; color: #aaa; text-align: center; }
+    .daily-count { font-size: 11px; font-weight: 700; color: #5B6EF5; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top-bar">
+    <div>
+      <h1>📊 통계 대시보드</h1>
+      <p class="auto-refresh">30초마다 자동 새로고침</p>
+    </div>
+    <div style="display:flex; gap:16px; align-items:center;">
+      <a th:href="@{/superadmin/dashboard}">← 관리 페이지</a>
+      <form th:action="@{/superadmin/logout}" method="post" style="margin:0">
+        <button type="submit" style="background:none;border:none;color:#e53935;font-size:13px;font-weight:600;cursor:pointer;">로그아웃</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 핵심 수치 카드 -->
+  <div class="stat-grid">
+    <div class="stat-card realtime">
+      <div class="label">🔴 실시간 접속자 (최근 5분)</div>
+      <div class="value" th:text="${stats.realtimeVisitors}">0</div>
+    </div>
+    <div class="stat-card today">
+      <div class="label">👤 오늘 순 방문자</div>
+      <div class="value" th:text="${stats.todayUnique}">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">📅 오늘 조회수</div>
+      <div class="value" th:text="${stats.todayViews}">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">📈 누적 총 조회수</div>
+      <div class="value" th:text="${stats.totalViews}">0</div>
+    </div>
+  </div>
+
+  <!-- 기기 유형 비율 -->
+  <div class="section">
+    <h2>📱 기기 유형</h2>
+    <div class="device-grid" th:with="
+      mobile=${stats.deviceStats['MOBILE']},
+      tablet=${stats.deviceStats['TABLET']},
+      pc=${stats.deviceStats['PC']},
+      total=${(stats.deviceStats['MOBILE'] ?: 0) + (stats.deviceStats['TABLET'] ?: 0) + (stats.deviceStats['PC'] ?: 0)}">
+      <div class="device-card">
+        <div class="device-icon">📱</div>
+        <div class="device-label">모바일</div>
+        <div class="device-value" th:text="${mobile ?: 0}">0</div>
+        <div class="device-pct" th:text="${total > 0 ? #numbers.formatDecimal((mobile ?: 0) * 100.0 / total, 1, 1) + '%' : '0%'}">0%</div>
+      </div>
+      <div class="device-card">
+        <div class="device-icon">🖥️</div>
+        <div class="device-label">PC</div>
+        <div class="device-value" th:text="${pc ?: 0}">0</div>
+        <div class="device-pct" th:text="${total > 0 ? #numbers.formatDecimal((pc ?: 0) * 100.0 / total, 1, 1) + '%' : '0%'}">0%</div>
+      </div>
+      <div class="device-card">
+        <div class="device-icon">📋</div>
+        <div class="device-label">태블릿</div>
+        <div class="device-value" th:text="${tablet ?: 0}">0</div>
+        <div class="device-pct" th:text="${total > 0 ? #numbers.formatDecimal((tablet ?: 0) * 100.0 / total, 1, 1) + '%' : '0%'}">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 학과 페이지 TOP 10 -->
+  <div class="section">
+    <h2>🏆 학과 페이지 조회수 TOP 10</h2>
+    <div class="page-rank-list" th:if="${!#lists.isEmpty(stats.topPages)}"
+         th:with="maxViews=${stats.topPages[0].views}">
+      <div class="page-rank-item" th:each="p, iter : ${stats.topPages}">
+        <span class="rank-num" th:classappend="${iter.index < 3} ? ' top' : ''"
+              th:text="${iter.count}">1</span>
+        <div class="rank-bar-wrap">
+          <div class="rank-label"
+               th:text="${p.universityName + ' ' + p.departmentName}">학과명</div>
+          <div class="rank-bar-bg">
+            <div class="rank-bar"
+                 th:style="'width:' + (${p.views} * 100 / ${maxViews}) + '%'"></div>
+          </div>
+        </div>
+        <span class="rank-count" th:text="${p.views}">0</span>
+      </div>
+    </div>
+    <p th:if="${#lists.isEmpty(stats.topPages)}" style="color:#aaa;font-size:13px;">아직 데이터가 없어요.</p>
+  </div>
+
+  <!-- 일별 방문자 추이 -->
+  <div class="section">
+    <h2>📅 최근 7일 방문자 추이</h2>
+    <div th:if="${!#lists.isEmpty(stats.dailyVisitors)}"
+         th:with="maxVal=${#lists.isEmpty(stats.dailyVisitors) ? 1 : stats.dailyVisitors[0].visitors}">
+      <div class="daily-chart" id="dailyChart">
+        <div class="daily-bar-wrap" th:each="d : ${stats.dailyVisitors}"
+             th:with="maxV=${stats.dailyVisitors.stream().mapToLong(x -> x.visitors).max().orElse(1)}">
+          <div class="daily-count" th:text="${d.visitors}">0</div>
+          <div class="daily-bar"
+               th:style="'height:' + (${d.visitors} * 80 / (${maxV} > 0 ? ${maxV} : 1)) + 'px'"></div>
+          <div class="daily-label" th:text="${#strings.substring(d.date, 5)}">날짜</div>
+        </div>
+      </div>
+    </div>
+    <p th:if="${#lists.isEmpty(stats.dailyVisitors)}" style="color:#aaa;font-size:13px;">아직 데이터가 없어요.</p>
+  </div>
+
+</div>
+
+<script>
+  // 30초마다 자동 새로고침
+  setTimeout(() => location.reload(), 30000);
+</script>
+</body>
+</html>

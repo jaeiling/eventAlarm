@@ -2,6 +2,7 @@ package com.example.eventalarm.controller;
 
 import com.example.eventalarm.domain.DepartmentPage;
 import com.example.eventalarm.service.DepartmentPageService;
+import com.example.eventalarm.service.StatsService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -21,9 +22,11 @@ public class SuperAdminController {
     private String superAdminPassword;
 
     private final DepartmentPageService pageService;
+    private final StatsService statsService;
 
-    public SuperAdminController(DepartmentPageService pageService) {
+    public SuperAdminController(DepartmentPageService pageService, StatsService statsService) {
         this.pageService = pageService;
+        this.statsService = statsService;
     }
 
     private boolean isAuthenticated(HttpSession session) {
@@ -64,6 +67,15 @@ public class SuperAdminController {
         List<DepartmentPage> pages = pageService.findAll();
         model.addAttribute("pages", pages);
         return "superadmin/dashboard";
+    }
+
+    // ── 통계 대시보드 ─────────────────────────────────────────────
+
+    @GetMapping("/stats")
+    public String stats(HttpSession session, Model model) {
+        if (!isAuthenticated(session)) return "redirect:/superadmin";
+        model.addAttribute("stats", statsService.getStats());
+        return "superadmin/stats";
     }
 
     // ── 페이지 수정 ───────────────────────────────────────────────

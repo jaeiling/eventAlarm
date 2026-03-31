@@ -6,6 +6,8 @@ import com.example.eventalarm.dto.DepartmentPageCreateDto;
 import com.example.eventalarm.dto.EventCreateDto;
 import com.example.eventalarm.service.DepartmentPageService;
 import com.example.eventalarm.service.EventService;
+import com.example.eventalarm.service.StatsService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
@@ -30,10 +32,13 @@ public class PageController {
 
     private final DepartmentPageService pageService;
     private final EventService eventService;
+    private final StatsService statsService;
 
-    public PageController(DepartmentPageService pageService, EventService eventService) {
+    public PageController(DepartmentPageService pageService, EventService eventService,
+                          StatsService statsService) {
         this.pageService = pageService;
         this.eventService = eventService;
+        this.statsService = statsService;
     }
 
     // ── 세션 헬퍼 ────────────────────────────────────────────────
@@ -208,6 +213,7 @@ public class PageController {
                                  @RequestParam(defaultValue = "false") boolean showPast,
                                  @RequestParam(defaultValue = "false") boolean sortDesc,
                                  HttpSession session,
+                                 HttpServletRequest request,
                                  Model model) {
         DepartmentPage page;
         try {
@@ -224,6 +230,14 @@ public class PageController {
         List<Event> events = eventService.findByPage(page.getId(), showPast, sortDesc);
         List<Event> allCalendarEvents = eventService.findAllEventsForCalendar(page.getId());
         boolean isAdmin = isAdminSession(session, page.getId());
+
+        // ── 방문 기록 저장 (관리자 본인 제외) ────────────────────
+        if (!isAdmin) {
+            try {
+                statsService.record(page.getId(), page.getUniversityName(),
+                        page.getDepartmentName(), request);
+            } catch (Exception ignored) {}
+        }
 
         model.addAttribute("page", page);
         model.addAttribute("events", events);
