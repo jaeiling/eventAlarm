@@ -2,6 +2,7 @@ package com.example.eventalarm.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * 학과 페이지 방문 기록
@@ -48,7 +49,7 @@ public class PageView {
         this.departmentName = departmentName;
         this.visitorIp = anonymize(visitorIp);
         this.deviceType = deviceType;
-        this.viewedAt = LocalDateTime.now();
+        this.viewedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     /** IP 마지막 옥텟 익명화 (192.168.1.100 → 192.168.1.xxx) */

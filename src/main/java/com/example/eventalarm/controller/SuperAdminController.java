@@ -72,9 +72,10 @@ public class SuperAdminController {
     // ── 통계 대시보드 ─────────────────────────────────────────────
 
     @GetMapping("/stats")
-    public String stats(HttpSession session, Model model) {
+    public String stats(@RequestParam(defaultValue = "0") int logPage,
+                        HttpSession session, Model model) {
         if (!isAuthenticated(session)) return "redirect:/superadmin";
-        model.addAttribute("stats", statsService.getStats());
+        model.addAttribute("stats", statsService.getStats(logPage));
         return "superadmin/stats";
     }
 

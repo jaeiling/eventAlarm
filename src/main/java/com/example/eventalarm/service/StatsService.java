@@ -6,9 +6,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -36,7 +37,7 @@ public class StatsService {
      * 대시보드용 통계 데이터 반환
      */
     @Transactional(readOnly = true)
-    public Map<String, Object> getStats() {
+    public Map<String, Object> getStats(int logPage) {
         Map<String, Object> stats = new LinkedHashMap<>();
 
         LocalDateTime startOfDay  = LocalDate.now().atStartOfDay();
@@ -85,20 +86,24 @@ public class StatsService {
         stats.put("dailyVisitors", dailyVisitors);
         stats.put("maxDailyVisitors", maxDailyVisitors);
 
-        // ── 최근 방문 로그 (최대 50개) ──────────────────────────
-        List<Map<String, Object>> recentLogs = new ArrayList<>();
-        ZoneId kst = ZoneId.of("Asia/Seoul");
-        ZoneId utc = ZoneId.of("UTC");
+        // ── 방문 로그 (페이지네이션, 50개씩) ───────────────────
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MM.dd HH:mm:ss");
-        for (PageView v : pageViewRepository.findTop50ByOrderByViewedAtDesc()) {
+        Page<PageView> logPageResult = pageViewRepository.findAllByOrderByViewedAtDesc(
+                PageRequest.of(logPage, 50));
+        List<Map<String, Object>> recentLogs = new ArrayList<>();
+        for (PageView v : logPageResult.getContent()) {
             Map<String, Object> log = new LinkedHashMap<>();
-            log.put("time", v.getViewedAt().atZone(utc).withZoneSameInstant(kst).format(fmt));
+            log.put("time", v.getViewedAt().format(fmt));
             log.put("page", v.getUniversityName() + " " + v.getDepartmentName());
             log.put("device", v.getDeviceType());
             log.put("ip", v.getVisitorIp());
             recentLogs.add(log);
         }
         stats.put("recentLogs", recentLogs);
+        stats.put("logPage", logPage);
+        stats.put("logTotalPages", logPageResult.getTotalPages());
+        stats.put("logHasPrev", logPage > 0);
+        stats.put("logHasNext", logPage < logPageResult.getTotalPages() - 1);
 
         return stats;
     }

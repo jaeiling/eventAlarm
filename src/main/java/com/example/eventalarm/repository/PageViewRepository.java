@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,6 +43,6 @@ public interface PageViewRepository extends JpaRepository<PageView, Long> {
            "GROUP BY CAST(v.viewedAt AS date) ORDER BY CAST(v.viewedAt AS date)")
     List<Object[]> findDailyVisitors(@Param("since") LocalDateTime since);
 
-    /** 최근 방문 기록 50개 (시간 역순) */
-    List<PageView> findTop50ByOrderByViewedAtDesc();
+    /** 방문 기록 페이지네이션 (시간 역순) */
+    Page<PageView> findAllByOrderByViewedAtDesc(Pageable pageable);
 }
